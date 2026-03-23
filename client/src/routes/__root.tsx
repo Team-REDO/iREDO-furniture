@@ -21,7 +21,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         <SidebarInset className="min-h-svh">
           <Header />
 
-          <main className="w-full flex-1 p-4 md:p-6">
+          <main className="w-full flex-1 p-4 md:p-0">
             <Outlet />
           </main>
 
