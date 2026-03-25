@@ -2,15 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { ListingCard, type ListingItem } from "@/components/listing-card";
-import furnitureItemsRaw from "@/data/furniture-items.json?raw";
-import furnitureCategoriesRaw from "@/data/furniture-categories.json?raw";
+import { ListingCard } from "@/components/listing-card";
 import { MATERIAL_ICONS } from "@/config/material-icons";
 import { cn } from "@/lib/utils";
+import { useFurnitureItems, useFurnitureCategories } from "@/hooks/use-furniture";
 
-const furnitureItems = JSON.parse(furnitureItemsRaw) as ListingItem[];
-type FurnitureCategory = { category: string; subcategories: string[] };
-const furnitureCategories = JSON.parse(furnitureCategoriesRaw) as FurnitureCategory[];
 type SortOption = "price-asc" | "price-desc" | "city-asc" | "city-desc";
 
 export const Route = createFileRoute("/browse-page")({
@@ -22,12 +18,16 @@ function RouteComponent() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
 
+  // Fetch data using custom hooks
+  const { data: furnitureCategories = [] } = useFurnitureCategories();
+  const { data: furnitureItems = [] } = useFurnitureItems();
+
   const selectedCategoryData = useMemo(() => furnitureCategories.find((category) => category.category === selectedCategory) ?? null, [selectedCategory]);
 
   const handleCategoryClick = (category: string) => {
     setSelectedCategory((current) => (current === category ? null : category));
     setSelectedSubcategory(null);
-  };
+  }; 
 
   const filteredItems = useMemo(() => {
     if (!selectedCategoryData) return furnitureItems;
