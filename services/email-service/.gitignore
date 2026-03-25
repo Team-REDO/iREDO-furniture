@@ -1,0 +1,51 @@
+# --------------------------
+# Build output
+# --------------------------
+bin/
+obj/
+out/
+
+# --------------------------
+# User-specific files
+# --------------------------
+*.user
+*.suo
+*.rsuser
+*.userprefs
+.vscode/
+.vs/
+.idea/
+
+# --------------------------
+# OS files
+# --------------------------
+.DS_Store
+Thumbs.db
+
+# --------------------------
+# NuGet packages
+# --------------------------
+*.nupkg
+# packages/   (if you use a local packages folder)
+
+# --------------------------
+# Logs and temporary files
+# --------------------------
+*.log
+*.tmp
+*.bak
+
+# --------------------------
+# Environment files (secrets)
+# --------------------------
+.env
+.env.local
+.env.development
+.env.production
+
+# --------------------------
+# ASP.NET / appsettings secrets
+# --------------------------
+appsettings.Development.json
+appsettings.Local.json
+secrets.json

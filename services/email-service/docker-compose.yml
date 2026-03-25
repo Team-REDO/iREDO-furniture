@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  emailservice:
+    build: .
+    container_name: emailservice
+    depends_on:
+      - rabbitmq
+    environment:
+        - MAILJET_API_KEY=${MAILJET_API_KEY}
+        - MAILJET_SECRET=${MAILJET_SECRET}
+        - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    
+     
