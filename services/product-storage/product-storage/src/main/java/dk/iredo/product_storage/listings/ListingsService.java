@@ -31,15 +31,10 @@ public class ListingsService {
     ColorsRepository colorsRepository;
 
     public ListingDetails addListing(Listing newListing, ListingDetails newListingDetails, List<Long> subCategoriesIDs,
-                              List<String> imagesUrls, List<Long> colorsIDs) throws CloneNotSupportedException
-    {
-        if(listingRepository.existsListingByGuid(newListing.getGuid()))
-        {
-            throw new CloneNotSupportedException("Listing by the given Gui: %s already exist".formatted(newListing.getGuid()));
-        }
-        if(listingDetailsRepository.existsListingDetailsByTitle(newListingDetails.getTitel()))
-        {
-            throw new CloneNotSupportedException("Listing by the given titel: %s already exist".formatted(newListingDetails.getTitel()));
+                              List<String> imagesUrls, List<Long> colorsIDs) throws CloneNotSupportedException {
+
+        if(listingRepository.existsListingByGuid(newListing.getGuid()) || listingDetailsRepository.existsListingDetailsByTitle(newListingDetails.getTitel())) {
+            throw new CloneNotSupportedException("Listing to be added already exist");
         }
 
         Listing addedListing = listingRepository.save(newListing);

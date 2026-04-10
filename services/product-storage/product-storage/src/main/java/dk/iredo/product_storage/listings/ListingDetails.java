@@ -48,6 +48,7 @@ public class ListingDetails {
     private Integer z_height_in_mm;
 
     //TODO - Nonnull works as nullable(false)?
+    //TODO - Change to Wear_rating
     @Nonnull()
     private Condition condition;
 
