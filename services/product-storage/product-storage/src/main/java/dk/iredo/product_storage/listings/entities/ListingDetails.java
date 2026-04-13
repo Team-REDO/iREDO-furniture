@@ -1,9 +1,9 @@
-package dk.iredo.product_storage.listings;
+package dk.iredo.product_storage.listings.entities;
 
-import dk.iredo.product_storage.categories.SubCategory;
+import dk.iredo.product_storage.categories.entities.SubCategory;
 import dk.iredo.product_storage.colors.Color;
-import dk.iredo.product_storage.enums.Condition;
 import dk.iredo.product_storage.images.Image;
+import dk.iredo.product_storage.listings.entities.enums.Condition;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
@@ -22,8 +22,8 @@ public class ListingDetails {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    //TODO test if correct cascade.type and parrent child relation
-    @OneToOne(cascade = CascadeType.REMOVE)
+    //TODO test if correct cascade.type and parent child relation
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "listingID", nullable = false)
     private Listing listing;
 
@@ -66,18 +66,25 @@ public class ListingDetails {
     //TODO - Nonnull works as nullable(false)?
     @Nonnull()
     //TODO - correct datetime format for DB?
-    private Date Modified_date;
+    private Date modified_date;
 
     //TODO correct fetch.type?
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "listing_details_color")
-    private List<Color> colors = new ArrayList<>();
+    private List<Color> colors;
 
     //TODO correct fetch.type?
     @ManyToMany(fetch = FetchType.LAZY)
-    private List<SubCategory> subCategories = new ArrayList<>();
+    private List<SubCategory> subCategories;
 
-    public ListingDetails(Listing listing, @Nonnull String title, @Nonnull String description, @Nullable Integer x_length_in_mm, @Nullable Integer y_width_in_mm, @Nullable Integer z_height_in_mm, @Nonnull Condition condition, int quantity, BigDecimal price, @Nonnull String city) {
+    @OneToMany(cascade = CascadeType.DETACH)
+    private List<Image> images;
+
+    public ListingDetails(Listing listing, @Nonnull String title, @Nonnull String description,
+                          @Nullable Integer x_length_in_mm, @Nullable Integer y_width_in_mm,
+                          @Nullable Integer z_height_in_mm, @Nonnull Condition condition, int quantity,
+                          BigDecimal price, @Nonnull String city, @Nonnull List<SubCategory> subCategories,
+                          @Nonnull List<Color> colors) {
         this.listing = listing;
         this.title = title;
         this.description = description;
@@ -88,7 +95,18 @@ public class ListingDetails {
         this.quantity = quantity;
         this.price = price;
         this.city = city;
-        Modified_date = new Date(System.currentTimeMillis());
+        this.modified_date = new Date(System.currentTimeMillis());
+        if(colors.isEmpty()){
+            throw new IllegalArgumentException("colors cannot be empty");
+        }
+        this.colors = new ArrayList<>();
+        colors.iterator().forEachRemaining(this::addColor);
+        if(subCategories.isEmpty()){
+            throw new IllegalArgumentException("subcategories cannot be empty");
+        }
+        this.subCategories = new ArrayList<>();
+        this.subCategories.addAll(subCategories);
+        this.images = new ArrayList<>(); // No images are allowed
     }
 
     public ListingDetails() {
@@ -183,11 +201,11 @@ public class ListingDetails {
 
     @Nonnull
     public Date getModified_date() {
-        return Modified_date;
+        return this.modified_date;
     }
 
     public void setModified_date(@Nonnull Date modified_date) {
-        Modified_date = modified_date;
+        this.modified_date = modified_date;
     }
 
     public Long getId() {
@@ -222,11 +240,20 @@ public class ListingDetails {
         }
     }
 
-    public void addColors(Color color) {
+    public void addColor(Color color) {
         if (color == null) {
             throw new NullPointerException("Color is null...");
         }else  {
+            color.getListingDetails().add(this);
             this.colors.add(color);
         }
+    }
+
+    public List<Image> getImages() {
+        return images;
+    }
+
+    public void addImage(Image image) {
+        this.images.add(image);
     }
 }

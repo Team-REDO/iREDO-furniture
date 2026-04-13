@@ -1,5 +1,6 @@
-package dk.iredo.product_storage.listings;
+package dk.iredo.product_storage.listings.repositories;
 
+import dk.iredo.product_storage.listings.entities.ListingDetails;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,4 +16,5 @@ public interface ListingDetailsRepository extends JpaRepository<ListingDetails, 
 
     @Query("SELECT ld FROM ListingDetails ld JOIN ld.listing listing WHERE listing.guid = :#{#listingGuid}")
     public Optional<ListingDetails> findListingDetailsByListingGuid(@Param("listingGuid") UUID listingGuid);
+
 }

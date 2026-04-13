@@ -1,7 +1,11 @@
-package dk.iredo.product_storage.categories;
+package dk.iredo.product_storage.categories.entities;
 
+import dk.iredo.product_storage.listings.entities.ListingDetails;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "sub_category")
@@ -20,9 +24,14 @@ public class SubCategory {
     @Nonnull()
     private Category category;
 
+    @ManyToMany()
+    @JoinTable()
+    List<ListingDetails> listingDetails;
+
     public SubCategory(@Nonnull String name, @Nonnull Category category) {
         this.name = name;
         this.category = category;
+        this.listingDetails = new ArrayList<>();
     }
     public SubCategory() {
     }
@@ -43,4 +52,11 @@ public class SubCategory {
         this.id = id;
     }
 
+    @Nonnull
+    public String getName() {
+        return name;
+    }
+    public void setName(@Nonnull String name) {
+        this.name = name;
+    }
 }

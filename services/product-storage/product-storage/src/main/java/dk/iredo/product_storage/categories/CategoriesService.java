@@ -1,5 +1,8 @@
 package dk.iredo.product_storage.categories;
 
+import dk.iredo.product_storage.categories.entities.SubCategory;
+import dk.iredo.product_storage.categories.repositories.CategoryRepository;
+import dk.iredo.product_storage.categories.repositories.SubCategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

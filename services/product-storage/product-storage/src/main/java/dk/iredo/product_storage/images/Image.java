@@ -1,6 +1,6 @@
 package dk.iredo.product_storage.images;
 
-import dk.iredo.product_storage.listings.ListingDetails;
+import dk.iredo.product_storage.listings.entities.ListingDetails;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
 
@@ -18,6 +18,14 @@ public class Image {
     @ManyToOne(cascade = CascadeType.DETACH)
     @JoinColumn(name = "listing_details_ID", nullable = false)
     private ListingDetails listingDetails;
+
+    public Image(@Nonnull String url, @Nonnull ListingDetails listingDetails) {
+        this.url = url;
+        this.listingDetails = listingDetails;
+        listingDetails.addImage(this);
+    }
+
+    public Image() {}
 
     @Nonnull
     public String getUrl() {
@@ -38,9 +46,5 @@ public class Image {
 
     public ListingDetails getListingDetails() {
         return listingDetails;
-    }
-
-    public void setListingDetails(ListingDetails listingDetails) {
-        this.listingDetails = listingDetails;
     }
 }

@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ColorsRepository extends JpaRepository<Color, Long> {
+    public Color findByHref(String href);
 }

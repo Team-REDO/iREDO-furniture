@@ -1,4 +1,4 @@
-package dk.iredo.product_storage.listings;
+package dk.iredo.product_storage.listings.entities;
 
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
