@@ -3,6 +3,8 @@ package dk.iredo.product_storage.categories.entities;
 import dk.iredo.product_storage.listings.entities.ListingDetails;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +12,8 @@ import java.util.List;
 @Entity
 @Table(name = "sub_category")
 public class SubCategory {
+    @Setter
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -19,6 +23,8 @@ public class SubCategory {
     private String name;
 
     //TODO see - good practise?
+    @Setter
+    @Getter
     @ManyToOne
     @JoinColumn(name = "category_id")
     @Nonnull()
@@ -34,22 +40,6 @@ public class SubCategory {
         this.listingDetails = new ArrayList<>();
     }
     public SubCategory() {
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     @Nonnull

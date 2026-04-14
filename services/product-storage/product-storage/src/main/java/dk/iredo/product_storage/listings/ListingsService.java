@@ -6,11 +6,10 @@ import dk.iredo.product_storage.colors.Color;
 import dk.iredo.product_storage.colors.ColorsRepository;
 import dk.iredo.product_storage.listings.entities.Listing;
 import dk.iredo.product_storage.listings.repositories.ListingRepository;
+import org.antlr.v4.runtime.misc.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.xml.transform.Source;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +25,9 @@ public class ListingsService {
     @Autowired
     ColorsRepository colorsRepository;
 
-    public Listing addListing(Listing listing) throws CloneNotSupportedException {
+
+
+    public Listing addListing(@NotNull Listing listing) throws CloneNotSupportedException {
 
         List<SubCategory> subCategories = new ArrayList<>();
         List<Color> colors = new ArrayList<>();
@@ -34,7 +35,6 @@ public class ListingsService {
         if(listingRepository.existsListingByGuid(listing.getGuid())) {
             throw new CloneNotSupportedException("Listing to be added already exist");
         }
-
         listing.getListingDetails().getSubCategories().forEach(subCategoryRequested -> {
             subCategories.add(subCategoryRepository.findSubCategoryByName(subCategoryRequested.getName()));
         });

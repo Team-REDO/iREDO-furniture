@@ -3,6 +3,8 @@ package dk.iredo.product_storage.colors;
 import dk.iredo.product_storage.listings.entities.ListingDetails;
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +12,8 @@ import java.util.List;
 @Entity
 @Table(name = "color")
 public class Color {
+    @Setter
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -24,6 +28,7 @@ public class Color {
     private String href;
 
     //TODO correct fetch.type?
+    @Getter
     @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     private List<ListingDetails> listingDetails;
 
@@ -53,18 +58,6 @@ public class Color {
 
     public void setHref(@Nonnull String href) {
         this.href = href;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public List<ListingDetails> getListingDetails() {
-        return listingDetails;
     }
 
 }

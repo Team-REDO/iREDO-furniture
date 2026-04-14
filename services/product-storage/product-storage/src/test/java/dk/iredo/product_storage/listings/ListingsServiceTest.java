@@ -10,6 +10,9 @@ import dk.iredo.product_storage.listings.entities.enums.Condition;
 import dk.iredo.product_storage.listings.entities.Listing;
 import dk.iredo.product_storage.listings.repositories.ListingRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -32,9 +35,6 @@ class ListingsServiceTest {
 
     @Autowired
     SubCategoryRepository subCategoryRepository;
-
-    @Autowired
-    ListingRepository listingRepository;
 
     @Autowired
     ListingsService listingsService;

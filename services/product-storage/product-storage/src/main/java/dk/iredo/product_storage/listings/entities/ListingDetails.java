@@ -7,6 +7,8 @@ import dk.iredo.product_storage.listings.entities.enums.Condition;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.math.BigDecimal;
@@ -17,12 +19,15 @@ import java.util.List;
 @Entity
 @Table(name = "listing_details")
 public class ListingDetails {
+    @Setter
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
     //TODO test if correct cascade.type and parent child relation
+    @Setter
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "listingID", nullable = false)
     private Listing listing;
@@ -52,10 +57,14 @@ public class ListingDetails {
     @Nonnull()
     private Condition condition;
 
+    @Setter
+    @Getter
     @ColumnDefault("1")
     private int quantity;
 
     //TODO ' precision = 10, ' in column? Only for big decimal? DKK?
+    @Setter
+    @Getter
     @Column(name = "price", nullable = false, scale = 2)
     private BigDecimal price;
 
@@ -69,14 +78,19 @@ public class ListingDetails {
     private Date modified_date;
 
     //TODO correct fetch.type?
+    @Setter
+    @Getter
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "listing_details_color")
     private List<Color> colors;
 
     //TODO correct fetch.type?
+    @Setter
+    @Getter
     @ManyToMany(fetch = FetchType.LAZY)
     private List<SubCategory> subCategories;
 
+    @Getter
     @OneToMany(cascade = CascadeType.DETACH)
     private List<Image> images;
 
@@ -110,14 +124,6 @@ public class ListingDetails {
     }
 
     public ListingDetails() {
-    }
-
-    public Listing getListing() {
-        return listing;
-    }
-
-    public void setListing(Listing listing) {
-        this.listing = listing;
     }
 
     @Nonnull
@@ -174,22 +180,6 @@ public class ListingDetails {
         this.condition = condition;
     }
 
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
     @Nonnull
     public String getCity() {
         return city;
@@ -208,30 +198,6 @@ public class ListingDetails {
         this.modified_date = modified_date;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public List<Color> getColors() {
-        return colors;
-    }
-
-    public void setColors(List<Color> colors) {
-        this.colors = colors;
-    }
-
-    public List<SubCategory> getSubCategories() {
-        return subCategories;
-    }
-
-    public void setSubCategories(List<SubCategory> subCategories) {
-        this.subCategories = subCategories;
-    }
-
     public void addSubCategories(SubCategory subCategory) {
         if (subCategory == null) {
             throw new NullPointerException("SubCategory is null...");
@@ -247,10 +213,6 @@ public class ListingDetails {
             color.getListingDetails().add(this);
             this.colors.add(color);
         }
-    }
-
-    public List<Image> getImages() {
-        return images;
     }
 
     public void addImage(Image image) {

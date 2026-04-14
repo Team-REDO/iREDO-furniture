@@ -6,6 +6,8 @@ import dk.iredo.product_storage.listings.entities.enums.Condition;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,6 +16,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "listing")
 public class Listing {
+    @Setter
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -46,14 +50,6 @@ public class Listing {
 
     public Listing() {
         //Empty constructor for the ORM
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     @Nonnull

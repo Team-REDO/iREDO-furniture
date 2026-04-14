@@ -2,10 +2,14 @@ package dk.iredo.product_storage.categories.entities;
 
 import jakarta.annotation.Nonnull;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "category")
 public class Category {
+    @Setter
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -29,14 +33,6 @@ public class Category {
 
     public void setName(@Nonnull String name) {
         this.name = name;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
 }
