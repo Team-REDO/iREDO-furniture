@@ -5,11 +5,15 @@ import { Separator } from "@/components/ui/separator";
 import { ListingCard } from "@/components/listing-card";
 import { MATERIAL_ICONS } from "@/config/material-icons";
 import { cn } from "@/lib/utils";
+import { furnitureCategoriesQueryOptions, furnitureItemsQueryOptions } from "@/features/furniture/queries";
 import { useFurnitureItems, useFurnitureCategories } from "@/hooks/use-furniture";
 
 type SortOption = "price-asc" | "price-desc" | "city-asc" | "city-desc";
 
 export const Route = createFileRoute("/browse-page")({
+  loader: async ({ context }) => {
+    await Promise.all([context.queryClient.ensureQueryData(furnitureCategoriesQueryOptions()), context.queryClient.ensureQueryData(furnitureItemsQueryOptions())]);
+  },
   component: RouteComponent,
 });
 
@@ -21,13 +25,21 @@ function RouteComponent() {
   // Fetch data using custom hooks
   const { data: furnitureCategories = [] } = useFurnitureCategories();
   const { data: furnitureItems = [] } = useFurnitureItems();
+ 
+  // With pagination:
+  // const { data: furnitureItems = [] } = useFurnitureItems({
+  //   usePagination: true,
+  //   page: 1,
+  //   pageSize: 12,
+  //   // city: "New York",
+  // });
 
-  const selectedCategoryData = useMemo(() => furnitureCategories.find((category) => category.category === selectedCategory) ?? null, [selectedCategory]);
+  const selectedCategoryData = useMemo(() => furnitureCategories.find((category) => category.category === selectedCategory) ?? null, [furnitureCategories, selectedCategory]);
 
   const handleCategoryClick = (category: string) => {
     setSelectedCategory((current) => (current === category ? null : category));
     setSelectedSubcategory(null);
-  }; 
+  };
 
   const filteredItems = useMemo(() => {
     if (!selectedCategoryData) return furnitureItems;
@@ -37,7 +49,7 @@ function RouteComponent() {
 
     if (!selectedSubcategory) return categoryFiltered;
     return categoryFiltered.filter((item) => item.subcategory === selectedSubcategory);
-  }, [selectedCategoryData, selectedSubcategory]);
+  }, [furnitureItems, selectedCategoryData, selectedSubcategory]);
 
   const sortedItems = useMemo(() => {
     const items = [...filteredItems];

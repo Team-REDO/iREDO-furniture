@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, useCarousel } from "@/components/ui/carousel";
+import type { ListingItem } from "@/features/furniture/types";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 const fallbackImages = [
@@ -11,13 +12,7 @@ const fallbackImages = [
   "https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&fit=crop&w=1200&q=80",
 ];
 
-export type ListingItem = {
-  title: string;
-  price: number;
-  city: string;
-  subcategory: string;
-  images: string[];
-};
+export type { ListingItem } from "@/features/furniture/types";
 
 function ListingCarouselControls() {
   const { scrollPrev, scrollNext } = useCarousel();

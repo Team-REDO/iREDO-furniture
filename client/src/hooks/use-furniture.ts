@@ -1,26 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
-import type { ListingItem } from "@/components/listing-card";
+import { furnitureCategoriesQueryOptions, furnitureItemsQueryOptions, furnitureItemsQueryOptions2 } from "@/features/furniture/queries";
+export type { FurnitureCategory, ListingItem } from "@/features/furniture/types";
 
-export type FurnitureCategory = { category: string; subcategories: string[] };
+export interface UseFurnitureItemsOptions {
+  usePagination?: boolean;
+  page?: number;
+  pageSize?: number;
+  city?: string;
+}
 
-export function useFurnitureItems() {
-  return useQuery<ListingItem[]>({
-    queryKey: ["furniture"],
-    queryFn: async () => {
-      const response = await fetch("http://localhost:3000/api/furniture");
-      if (!response.ok) throw new Error("Failed to fetch furniture");
-      return response.json();
-    },
-  });
+export function useFurnitureItems(options: UseFurnitureItemsOptions = {}) {
+  const { usePagination = false, page = 1, pageSize = 12, city } = options;
+
+  if (usePagination) {
+    return useQuery({
+      ...furnitureItemsQueryOptions2({ page, pageSize, city }),
+      select: (data) => data.furniture,
+    });
+  }
+
+  return useQuery(furnitureItemsQueryOptions());
 }
 
 export function useFurnitureCategories() {
-  return useQuery<FurnitureCategory[]>({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const response = await fetch("http://localhost:3000/api/categories");
-      if (!response.ok) throw new Error("Failed to fetch categories");
-      return response.json();
-    },
-  });
+  return useQuery(furnitureCategoriesQueryOptions());
 }
