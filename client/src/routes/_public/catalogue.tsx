@@ -10,7 +10,7 @@ import { useFurnitureItems, useFurnitureCategories } from "@/hooks/use-furniture
 
 type SortOption = "price-asc" | "price-desc" | "city-asc" | "city-desc";
 
-export const Route = createFileRoute("/browse-page")({
+export const Route = createFileRoute("/_public/catalogue")({
   loader: async ({ context }) => {
     await Promise.all([context.queryClient.ensureQueryData(furnitureCategoriesQueryOptions()), context.queryClient.ensureQueryData(furnitureItemsQueryOptions())]);
   },

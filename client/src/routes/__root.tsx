@@ -7,9 +7,11 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import type { AuthContextType } from '@/context/auth.context';
 
 interface RouterContext {
   queryClient: QueryClient
+  auth: AuthContextType
 }
 
 export const Route = createRootRouteWithContext<RouterContext>()({

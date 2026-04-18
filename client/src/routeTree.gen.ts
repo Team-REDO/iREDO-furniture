@@ -9,86 +9,320 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginPageRouteImport } from './routes/login-page'
-import { Route as BrowsePageRouteImport } from './routes/browse-page'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicRouteRouteImport } from './routes/_public/route'
+import { Route as ProtectedRouteRouteImport } from './routes/_protected/route'
+import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as PublicRegisterRouteImport } from './routes/_public/register'
+import { Route as PublicLoginRouteImport } from './routes/_public/login'
+import { Route as PublicCatalogueRouteImport } from './routes/_public/catalogue'
+import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
+import { Route as ProtectedMyListingRouteImport } from './routes/_protected/my-listing'
+import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
+import { Route as ProtectedCreateListingRouteImport } from './routes/_protected/create-listing'
+import { Route as ProtectedAdminRouteRouteImport } from './routes/_protected/_admin/route'
+import { Route as ProtectedAdminUsersRouteImport } from './routes/_protected/_admin/users'
+import { Route as ProtectedAdminListingsRouteImport } from './routes/_protected/_admin/listings'
 
-const LoginPageRoute = LoginPageRouteImport.update({
-  id: '/login-page',
-  path: '/login-page',
+const PublicRouteRoute = PublicRouteRouteImport.update({
+  id: '/_public',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BrowsePageRoute = BrowsePageRouteImport.update({
-  id: '/browse-page',
-  path: '/browse-page',
+const ProtectedRouteRoute = ProtectedRouteRouteImport.update({
+  id: '/_protected',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicRegisterRoute = PublicRegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicLoginRoute = PublicLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicCatalogueRoute = PublicCatalogueRouteImport.update({
+  id: '/catalogue',
+  path: '/catalogue',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ProtectedRouteRoute,
+} as any)
+const ProtectedMyListingRoute = ProtectedMyListingRouteImport.update({
+  id: '/my-listing',
+  path: '/my-listing',
+  getParentRoute: () => ProtectedRouteRoute,
+} as any)
+const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => ProtectedRouteRoute,
+} as any)
+const ProtectedCreateListingRoute = ProtectedCreateListingRouteImport.update({
+  id: '/create-listing',
+  path: '/create-listing',
+  getParentRoute: () => ProtectedRouteRoute,
+} as any)
+const ProtectedAdminRouteRoute = ProtectedAdminRouteRouteImport.update({
+  id: '/_admin',
+  getParentRoute: () => ProtectedRouteRoute,
+} as any)
+const ProtectedAdminUsersRoute = ProtectedAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => ProtectedAdminRouteRoute,
+} as any)
+const ProtectedAdminListingsRoute = ProtectedAdminListingsRouteImport.update({
+  id: '/listings',
+  path: '/listings',
+  getParentRoute: () => ProtectedAdminRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/browse-page': typeof BrowsePageRoute
-  '/login-page': typeof LoginPageRoute
+  '/': typeof PublicIndexRoute
+  '/create-listing': typeof ProtectedCreateListingRoute
+  '/dashboard': typeof ProtectedDashboardRoute
+  '/my-listing': typeof ProtectedMyListingRoute
+  '/profile': typeof ProtectedProfileRoute
+  '/catalogue': typeof PublicCatalogueRoute
+  '/login': typeof PublicLoginRoute
+  '/register': typeof PublicRegisterRoute
+  '/listings': typeof ProtectedAdminListingsRoute
+  '/users': typeof ProtectedAdminUsersRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/browse-page': typeof BrowsePageRoute
-  '/login-page': typeof LoginPageRoute
+  '/': typeof PublicIndexRoute
+  '/create-listing': typeof ProtectedCreateListingRoute
+  '/dashboard': typeof ProtectedDashboardRoute
+  '/my-listing': typeof ProtectedMyListingRoute
+  '/profile': typeof ProtectedProfileRoute
+  '/catalogue': typeof PublicCatalogueRoute
+  '/login': typeof PublicLoginRoute
+  '/register': typeof PublicRegisterRoute
+  '/listings': typeof ProtectedAdminListingsRoute
+  '/users': typeof ProtectedAdminUsersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/browse-page': typeof BrowsePageRoute
-  '/login-page': typeof LoginPageRoute
+  '/_protected': typeof ProtectedRouteRouteWithChildren
+  '/_public': typeof PublicRouteRouteWithChildren
+  '/_protected/_admin': typeof ProtectedAdminRouteRouteWithChildren
+  '/_protected/create-listing': typeof ProtectedCreateListingRoute
+  '/_protected/dashboard': typeof ProtectedDashboardRoute
+  '/_protected/my-listing': typeof ProtectedMyListingRoute
+  '/_protected/profile': typeof ProtectedProfileRoute
+  '/_public/catalogue': typeof PublicCatalogueRoute
+  '/_public/login': typeof PublicLoginRoute
+  '/_public/register': typeof PublicRegisterRoute
+  '/_public/': typeof PublicIndexRoute
+  '/_protected/_admin/listings': typeof ProtectedAdminListingsRoute
+  '/_protected/_admin/users': typeof ProtectedAdminUsersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/browse-page' | '/login-page'
+  fullPaths:
+    | '/'
+    | '/create-listing'
+    | '/dashboard'
+    | '/my-listing'
+    | '/profile'
+    | '/catalogue'
+    | '/login'
+    | '/register'
+    | '/listings'
+    | '/users'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/browse-page' | '/login-page'
-  id: '__root__' | '/' | '/browse-page' | '/login-page'
+  to:
+    | '/'
+    | '/create-listing'
+    | '/dashboard'
+    | '/my-listing'
+    | '/profile'
+    | '/catalogue'
+    | '/login'
+    | '/register'
+    | '/listings'
+    | '/users'
+  id:
+    | '__root__'
+    | '/_protected'
+    | '/_public'
+    | '/_protected/_admin'
+    | '/_protected/create-listing'
+    | '/_protected/dashboard'
+    | '/_protected/my-listing'
+    | '/_protected/profile'
+    | '/_public/catalogue'
+    | '/_public/login'
+    | '/_public/register'
+    | '/_public/'
+    | '/_protected/_admin/listings'
+    | '/_protected/_admin/users'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  BrowsePageRoute: typeof BrowsePageRoute
-  LoginPageRoute: typeof LoginPageRoute
+  ProtectedRouteRoute: typeof ProtectedRouteRouteWithChildren
+  PublicRouteRoute: typeof PublicRouteRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/login-page': {
-      id: '/login-page'
-      path: '/login-page'
-      fullPath: '/login-page'
-      preLoaderRoute: typeof LoginPageRouteImport
+    '/_public': {
+      id: '/_public'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof PublicRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/browse-page': {
-      id: '/browse-page'
-      path: '/browse-page'
-      fullPath: '/browse-page'
-      preLoaderRoute: typeof BrowsePageRouteImport
+    '/_protected': {
+      id: '/_protected'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProtectedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_public/': {
+      id: '/_public/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof PublicIndexRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/register': {
+      id: '/_public/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof PublicRegisterRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/login': {
+      id: '/_public/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof PublicLoginRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/catalogue': {
+      id: '/_public/catalogue'
+      path: '/catalogue'
+      fullPath: '/catalogue'
+      preLoaderRoute: typeof PublicCatalogueRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_protected/profile': {
+      id: '/_protected/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProtectedProfileRouteImport
+      parentRoute: typeof ProtectedRouteRoute
+    }
+    '/_protected/my-listing': {
+      id: '/_protected/my-listing'
+      path: '/my-listing'
+      fullPath: '/my-listing'
+      preLoaderRoute: typeof ProtectedMyListingRouteImport
+      parentRoute: typeof ProtectedRouteRoute
+    }
+    '/_protected/dashboard': {
+      id: '/_protected/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof ProtectedDashboardRouteImport
+      parentRoute: typeof ProtectedRouteRoute
+    }
+    '/_protected/create-listing': {
+      id: '/_protected/create-listing'
+      path: '/create-listing'
+      fullPath: '/create-listing'
+      preLoaderRoute: typeof ProtectedCreateListingRouteImport
+      parentRoute: typeof ProtectedRouteRoute
+    }
+    '/_protected/_admin': {
+      id: '/_protected/_admin'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProtectedAdminRouteRouteImport
+      parentRoute: typeof ProtectedRouteRoute
+    }
+    '/_protected/_admin/users': {
+      id: '/_protected/_admin/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof ProtectedAdminUsersRouteImport
+      parentRoute: typeof ProtectedAdminRouteRoute
+    }
+    '/_protected/_admin/listings': {
+      id: '/_protected/_admin/listings'
+      path: '/listings'
+      fullPath: '/listings'
+      preLoaderRoute: typeof ProtectedAdminListingsRouteImport
+      parentRoute: typeof ProtectedAdminRouteRoute
     }
   }
 }
 
+interface ProtectedAdminRouteRouteChildren {
+  ProtectedAdminListingsRoute: typeof ProtectedAdminListingsRoute
+  ProtectedAdminUsersRoute: typeof ProtectedAdminUsersRoute
+}
+
+const ProtectedAdminRouteRouteChildren: ProtectedAdminRouteRouteChildren = {
+  ProtectedAdminListingsRoute: ProtectedAdminListingsRoute,
+  ProtectedAdminUsersRoute: ProtectedAdminUsersRoute,
+}
+
+const ProtectedAdminRouteRouteWithChildren =
+  ProtectedAdminRouteRoute._addFileChildren(ProtectedAdminRouteRouteChildren)
+
+interface ProtectedRouteRouteChildren {
+  ProtectedAdminRouteRoute: typeof ProtectedAdminRouteRouteWithChildren
+  ProtectedCreateListingRoute: typeof ProtectedCreateListingRoute
+  ProtectedDashboardRoute: typeof ProtectedDashboardRoute
+  ProtectedMyListingRoute: typeof ProtectedMyListingRoute
+  ProtectedProfileRoute: typeof ProtectedProfileRoute
+}
+
+const ProtectedRouteRouteChildren: ProtectedRouteRouteChildren = {
+  ProtectedAdminRouteRoute: ProtectedAdminRouteRouteWithChildren,
+  ProtectedCreateListingRoute: ProtectedCreateListingRoute,
+  ProtectedDashboardRoute: ProtectedDashboardRoute,
+  ProtectedMyListingRoute: ProtectedMyListingRoute,
+  ProtectedProfileRoute: ProtectedProfileRoute,
+}
+
+const ProtectedRouteRouteWithChildren = ProtectedRouteRoute._addFileChildren(
+  ProtectedRouteRouteChildren,
+)
+
+interface PublicRouteRouteChildren {
+  PublicCatalogueRoute: typeof PublicCatalogueRoute
+  PublicLoginRoute: typeof PublicLoginRoute
+  PublicRegisterRoute: typeof PublicRegisterRoute
+  PublicIndexRoute: typeof PublicIndexRoute
+}
+
+const PublicRouteRouteChildren: PublicRouteRouteChildren = {
+  PublicCatalogueRoute: PublicCatalogueRoute,
+  PublicLoginRoute: PublicLoginRoute,
+  PublicRegisterRoute: PublicRegisterRoute,
+  PublicIndexRoute: PublicIndexRoute,
+}
+
+const PublicRouteRouteWithChildren = PublicRouteRoute._addFileChildren(
+  PublicRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  BrowsePageRoute: BrowsePageRoute,
-  LoginPageRoute: LoginPageRoute,
+  ProtectedRouteRoute: ProtectedRouteRouteWithChildren,
+  PublicRouteRoute: PublicRouteRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
