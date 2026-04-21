@@ -27,11 +27,6 @@ public class Color {
     @Nonnull()
     private String href;
 
-    //TODO correct fetch.type?
-    @Getter
-    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
-    private List<ListingDetails> listingDetails;
-
     public Color() {
     }
 
@@ -39,7 +34,6 @@ public class Color {
     public Color(@Nonnull String name, @Nonnull String href) {
         this.name = name;
         this.href = href;
-        this.listingDetails = new ArrayList<>();
     }
 
     @Nonnull

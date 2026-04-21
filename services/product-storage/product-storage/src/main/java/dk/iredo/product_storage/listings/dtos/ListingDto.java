@@ -1,10 +1,9 @@
 package dk.iredo.product_storage.listings.dtos;
 
-import dk.iredo.product_storage.listings.entities.enums.Condition;
+import dk.iredo.product_storage.listings.enums.Condition;
 import lombok.Data;
 import lombok.Getter;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.List;
@@ -12,37 +11,37 @@ import java.util.Objects;
 import java.util.UUID;
 
 //TODO split up?
-
+//TODO Keep VS. Changes VS. Delete ???
 
 /**
  * DTO for {@link dk.iredo.product_storage.listings.entities.Listing}
  */
 @Data
-public class ListingDTO {
+public class ListingDto {
     private UUID guid;
     private UUID personID;
-    private ListingDetailsDto listingDetails;
+    private ListingDetailsDto listingDetails; //TODO - Keep?
 
-    public ListingDTO() {
+    public ListingDto() {
     }
 
-    public ListingDTO(UUID guid, UUID personID, ListingDetailsDto listingDetails) {
+    public ListingDto(UUID guid, UUID personID, ListingDetailsDto listingDetails) {
         this.guid = guid;
         this.personID = personID;
         this.listingDetails = listingDetails;
     }
 
-    public ListingDTO setGuid(UUID guid) {
+    public ListingDto setGuid(UUID guid) {
         this.guid = guid;
         return this;
     }
 
-    public ListingDTO setPersonID(UUID personID) {
+    public ListingDto setPersonID(UUID personID) {
         this.personID = personID;
         return this;
     }
 
-    public ListingDTO setListingDetails(ListingDetailsDto listingDetails) {
+    public ListingDto setListingDetails(ListingDetailsDto listingDetails) {
         this.listingDetails = listingDetails;
         return this;
     }
@@ -51,7 +50,7 @@ public class ListingDTO {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ListingDTO entity = (ListingDTO) o;
+        ListingDto entity = (ListingDto) o;
         return Objects.equals(this.guid, entity.guid) &&
                 Objects.equals(this.personID, entity.personID) &&
                 Objects.equals(this.listingDetails, entity.listingDetails);

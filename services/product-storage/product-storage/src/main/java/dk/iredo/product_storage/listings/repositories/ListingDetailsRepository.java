@@ -14,7 +14,7 @@ public interface ListingDetailsRepository extends JpaRepository<ListingDetails, 
 
     public boolean existsListingDetailsByTitle(String title);
 
-    @Query("SELECT ld FROM ListingDetails ld JOIN ld.listing listing WHERE listing.guid = :#{#listingGuid}")
+    @Query("SELECT ld FROM Listing l JOIN l.listingDetails ld WHERE l.GUID = :#{#listingGuid}")
     public Optional<ListingDetails> findListingDetailsByListingGuid(@Param("listingGuid") UUID listingGuid);
 
 }

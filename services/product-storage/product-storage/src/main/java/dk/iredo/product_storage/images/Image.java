@@ -16,28 +16,22 @@ public class Image {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @Setter
+    @Getter
     @Nonnull()
     private String url;
 
-    @ManyToOne(cascade = CascadeType.DETACH)
-    @JoinColumn(name = "listing_details_ID")
+    @Setter
+    @Getter
+    @Nonnull()
+    @ManyToOne()
     private ListingDetails listingDetails;
 
     public Image(@Nonnull String url, @Nonnull ListingDetails listingDetails) {
         this.url = url;
         this.listingDetails = listingDetails;
-        listingDetails.addImage(this);
     }
 
     public Image() {}
-
-    @Nonnull
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(@Nonnull String url) {
-        this.url = url;
-    }
 
 }

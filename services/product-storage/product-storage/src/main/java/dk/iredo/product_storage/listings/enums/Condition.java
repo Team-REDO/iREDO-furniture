@@ -1,4 +1,4 @@
-package dk.iredo.product_storage.listings.entities.enums;
+package dk.iredo.product_storage.listings.enums;
 
 import java.util.HashMap;
 import java.util.Map;

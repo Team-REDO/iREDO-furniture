@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ListingRepository extends JpaRepository<Listing, Long> {
 
-    @Query("SELECT True FROM Listing l WHERE l.guid = :#{#guid}")
+    @Query("SELECT True FROM Listing l WHERE l.GUID = :#{#guid}")
     default Boolean existsListingByGuid(@Param("guid") UUID guid) {
         return Boolean.FALSE;
     }

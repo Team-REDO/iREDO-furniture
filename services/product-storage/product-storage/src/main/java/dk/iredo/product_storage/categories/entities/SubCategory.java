@@ -30,14 +30,9 @@ public class SubCategory {
     @Nonnull()
     private Category category;
 
-    @ManyToMany()
-    @JoinTable()
-    List<ListingDetails> listingDetails;
-
     public SubCategory(@Nonnull String name, @Nonnull Category category) {
         this.name = name;
         this.category = category;
-        this.listingDetails = new ArrayList<>();
     }
     public SubCategory() {
     }
