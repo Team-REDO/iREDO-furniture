@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,6 +47,7 @@ public class Listing {
                    @Nonnull ListingDetails listingDetails) {
         this.GUID = GUID;
         this.personGUID = personGUID;
+        listingDetails.setModified_date(new Date(System.currentTimeMillis()));
         this.listingDetails = listingDetails;
     }
 

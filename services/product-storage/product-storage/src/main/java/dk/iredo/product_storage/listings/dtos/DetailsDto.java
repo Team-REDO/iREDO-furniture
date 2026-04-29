@@ -18,7 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(chain = true)
-public class ListingDetailsDto implements Serializable {
+public class DetailsDto implements Serializable {
     private String title;
     private String description;
     private Integer x_length_in_mm;
@@ -26,9 +26,9 @@ public class ListingDetailsDto implements Serializable {
     private Integer z_height_in_mm;
     private Condition condition;
     private Integer quantity;
-    private BigDecimal price;
+    private BigDecimal price_dkk;
     private String city;
     private Date modified_date;
     private List<String> colorHRefs;
-    private List<String> subcategoryNames;
+    private List<String> subCategoryNames;
 }

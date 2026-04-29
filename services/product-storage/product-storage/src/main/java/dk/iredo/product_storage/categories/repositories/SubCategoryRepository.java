@@ -15,6 +15,6 @@ public interface SubCategoryRepository extends JpaRepository<SubCategory, Long> 
     @Query("SELECT sc FROM SubCategory sc")
     public List<SubCategory> getAll();
 
-    @Query("SELECT sc FROM SubCategory sc WHERE sc.name = :#{#name}")
+    @Query("SELECT sc FROM SubCategory sc WHERE sc.name =:#{#name}")
     public SubCategory findSubCategoryByName(@Param("name") String name);
 }

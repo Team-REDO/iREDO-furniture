@@ -2,11 +2,10 @@ package dk.iredo.product_storage.listings.controllers;
 
 import dk.iredo.product_storage.listings.services.ListingsService;
 import dk.iredo.product_storage.listings.dtos.ListingDto;
-import dk.iredo.product_storage.listings.dtos.ListingDetailsDto;
+import dk.iredo.product_storage.listings.dtos.DetailsDto;
 import dk.iredo.product_storage.listings.entities.Listing;
-import dk.iredo.product_storage.listings.entities.ListingDetails;
+import lombok.Getter;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,24 +19,21 @@ public class ListingsREST implements IListingsController{
 
     private final ListingsService listingsService;
 
-    private final ModelMapper modelMapper;
-
-    public ListingsREST(ListingsService listingsService, ModelMapper modelMapper) {
+    public ListingsREST(ListingsService listingsService) {
         this.listingsService = listingsService;
-        this.modelMapper = modelMapper;
     }
 
     @Override
-    public ResponseEntity<ListingDto> addListings(@RequestBody ListingDetailsDto listingDetailsDto,
+    public ResponseEntity<ListingDto> addListings(@RequestBody DetailsDto detailsDto,
                                                          @PathVariable UUID listingGUID,
                                                          @PathVariable UUID personGUID){
         try {
-            ListingDetails requestedDetails = modelMapper.map(listingDetailsDto, ListingDetails.class); // TODO - Dto handling here?
-            Listing listing = listingsService.addListing(requestedDetails,
-                    listingGUID, personGUID,
-                    listingDetailsDto.getColorHRefs(), listingDetailsDto.getSubcategoryNames()
+            //TODO - DTO Handling???? WHERE ??
+            Listing listing = this.listingsService.addListing(detailsDto,
+                    listingGUID, personGUID
             );
-            return ResponseEntity.ok(modelMapper.map(listing, ListingDto.class));
+            ListingDto listingDto = this.listingsService.getModelMapper().map(listing, ListingDto.class);
+            return ResponseEntity.ok(listingDto);
         }catch (CloneNotSupportedException e) {
             return ResponseEntity.badRequest().build();
         }

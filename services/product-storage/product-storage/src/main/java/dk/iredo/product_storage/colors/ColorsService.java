@@ -11,6 +11,7 @@ public class ColorsService {
     @Autowired
     private ColorsRepository colorsRepository;
 
+    //TODO make interface
     public Color addColor(Color color) {
         return colorsRepository.save(color);
     }

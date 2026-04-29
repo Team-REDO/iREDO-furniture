@@ -71,8 +71,8 @@ public class ListingDetails {
     //TODO ' precision = 10, ' in column? Only for big decimal? DKK?
     @Setter
     @Getter
-    @Column(name = "price", nullable = false, scale = 2)
-    private BigDecimal price;
+    @Column(name = "price_dkk", nullable = false, scale = 2)
+    private BigDecimal price_dkk;
 
     @Setter
     @Getter
@@ -82,27 +82,25 @@ public class ListingDetails {
 
     @Setter
     @Getter
-    //TODO - Nonnull works as nullable(false)?
-    @Nonnull()
     //TODO - correct datetime format for DB?
     private Date modified_date;
 
     //TODO correct fetch.type?
     @Getter
     @ManyToMany()
-    private List<Color> colors;
+    private final List<Color> colors = new ArrayList<>();
 
     //TODO correct fetch.type?
     @Getter
     @ManyToMany()
-    private List<SubCategory> subCategories;
+    private final List<SubCategory> subCategories = new ArrayList<>();
 
 
     public ListingDetails(@Nonnull String title, @Nonnull String description,
                           @Nonnull Integer x_length_in_mm, @Nonnull Integer y_width_in_mm,
                           @Nonnull Integer z_height_in_mm, @Nonnull Condition condition,
                           @Nullable Integer quantity,
-                          @Nonnull BigDecimal price, @Nonnull String city
+                          @Nonnull BigDecimal price_dkk, @Nonnull String city
     ) {
         this.title = title;
         this.description = description;
@@ -111,11 +109,9 @@ public class ListingDetails {
         this.z_height_in_mm = z_height_in_mm;
         this.condition = condition;
         if(quantity == null) this.quantity = 1; else this.quantity = quantity;
-        this.price = price;
+        this.price_dkk = price_dkk;
         this.city = city;
         this.modified_date = new Date(System.currentTimeMillis());
-        this.colors = new ArrayList<>();
-        this.subCategories = new ArrayList<>();
     }
 
     public ListingDetails() {
@@ -123,7 +119,7 @@ public class ListingDetails {
 
     public void addSubCategory(SubCategory subCategory) {
         if (subCategory == null) {
-            throw new NullPointerException("Given sub category is null...");
+            throw new NullPointerException("Given subcategory is null...");
         }else  {
             this.subCategories.add(subCategory);
         }

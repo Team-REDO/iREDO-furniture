@@ -7,6 +7,8 @@ import dk.iredo.product_storage.categories.repositories.SubCategoryRepository;
 import dk.iredo.product_storage.colors.Color;
 import dk.iredo.product_storage.colors.ColorsRepository;
 import dk.iredo.product_storage.images.ImageRepository;
+import dk.iredo.product_storage.listings.dtos.DetailsDto;
+import dk.iredo.product_storage.listings.dtos.ListingDto;
 import dk.iredo.product_storage.listings.entities.ListingDetails;
 import dk.iredo.product_storage.listings.enums.Condition;
 import dk.iredo.product_storage.listings.entities.Listing;
@@ -85,17 +87,15 @@ class ListingsServiceTest {
         List<String> colorHRefs = new ArrayList<>();
         colorHRefs.add("#f44336");
 
-        ListingDetails listingDetails =new ListingDetails(
+        DetailsDto listingDetails = new DetailsDto(
                 title, description, x_length_in_mm, y_width_in_mm, z_height_in_mm,
-                condition, quantity, priceDKK, city
+                condition, quantity, priceDKK, city, null, colorHRefs, subCategoryNames
         );
 
         /*Act*/
         Listing actual;
         try {
-            actual = listingsService.addListing(listingDetails, listingGuid, personGuid,
-                    colorHRefs, subCategoryNames
-            );
+            actual = listingsService.addListing(listingDetails, listingGuid, personGuid);
 
         /*Assert*/
             Assertions.assertNotNull(actual); //if listing core is generated in db

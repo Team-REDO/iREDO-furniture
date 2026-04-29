@@ -19,15 +19,15 @@ import java.util.UUID;
 @Data
 public class ListingDto {
     private UUID guid;
-    private UUID personID;
+    private UUID personGUID;
     private ListingDetailsDto listingDetails; //TODO - Keep?
 
     public ListingDto() {
     }
 
-    public ListingDto(UUID guid, UUID personID, ListingDetailsDto listingDetails) {
+    public ListingDto(UUID guid, UUID personGUID, ListingDetailsDto listingDetails) {
         this.guid = guid;
-        this.personID = personID;
+        this.personGUID = personGUID;
         this.listingDetails = listingDetails;
     }
 
@@ -36,8 +36,8 @@ public class ListingDto {
         return this;
     }
 
-    public ListingDto setPersonID(UUID personID) {
-        this.personID = personID;
+    public ListingDto setPersonID(UUID personGUID) {
+        this.personGUID = personGUID;
         return this;
     }
 
@@ -52,20 +52,20 @@ public class ListingDto {
         if (o == null || getClass() != o.getClass()) return false;
         ListingDto entity = (ListingDto) o;
         return Objects.equals(this.guid, entity.guid) &&
-                Objects.equals(this.personID, entity.personID) &&
+                Objects.equals(this.personGUID, entity.personGUID) &&
                 Objects.equals(this.listingDetails, entity.listingDetails);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(guid, personID, listingDetails);
+        return Objects.hash(guid, personGUID, listingDetails);
     }
 
     @Override
     public String toString() {
         return getClass().getSimpleName() + "(" +
                 "guid = " + guid + ", " +
-                "personID = " + personID + ", " +
+                "personGUID = " + personGUID + ", " +
                 "listingDetails = " + listingDetails + ")";
     }
 

@@ -17,6 +17,7 @@ public class CategoriesService {
     @Autowired
     CategoryRepository categoryRepository;
 
+    //TODO make interface
     public List<SubCategory> getAllSubCategories() {
         return subCategoryRepository.getAll();
     }
