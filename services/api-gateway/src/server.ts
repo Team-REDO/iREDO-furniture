@@ -1,7 +1,7 @@
 import "dotenv/config";
 import app from "./app.js"
 
-const PORT = process.env.POR || 3123; 
+const PORT = process.env.POR || 3100; 
 
 app.listen(PORT, () => {
     console.log(`Gateway running on ${PORT}`);
