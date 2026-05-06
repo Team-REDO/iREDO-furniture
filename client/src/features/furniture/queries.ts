@@ -1,33 +1,10 @@
 import { queryOptions } from "@tanstack/react-query";
-import { gql } from "graphql-request";
-import { graphqlClient } from "@/lib/graphql-client";
+import { apiClient } from "@/lib/api-client";
 import type { FurnitureCategory, ListingItem } from "@/features/furniture/types";
-
-const FURNITURE_ITEMS_QUERY = gql`
-  query FurnitureItems {
-    furniture {
-      title
-      price
-      city
-      subcategory
-      images
-    }
-  }
-`;
-
-const FURNITURE_CATEGORIES_QUERY = gql`
-  query FurnitureCategories {
-    categories {
-      category
-      subcategories
-    }
-  }
-`;
-
-
 
 type FurnitureItemsResult = {
   furniture: ListingItem[];
+  furnitureTotal?: number;
 };
 
 type FurnitureCategoriesResult = {
@@ -35,12 +12,12 @@ type FurnitureCategoriesResult = {
 };
 
 async function fetchFurnitureItems() {
-  const data = await graphqlClient.request<FurnitureItemsResult>(FURNITURE_ITEMS_QUERY);
+  const data = await apiClient.get<FurnitureItemsResult>("/api/catalogue/furniture");
   return data.furniture;
 }
 
 async function fetchFurnitureCategories() {
-  const data = await graphqlClient.request<FurnitureCategoriesResult>(FURNITURE_CATEGORIES_QUERY);
+  const data = await apiClient.get<FurnitureCategoriesResult>("/api/catalogue/categories");
   return data.categories;
 }
 
@@ -60,19 +37,6 @@ export function furnitureCategoriesQueryOptions() {
 
 // ___________________________
 
-const PAGINATED_FURNITURE_QUERY = gql`
-  query FurnitureItems($city: String, $page: Int, $pageSize: Int) {
-    furniture(city: $city, page: $page, pageSize: $pageSize) {
-      title
-      price
-      city
-      subcategory
-      images
-    }
-    furnitureTotal(city: $city)
-  }
-`;
-
 type FurnitureItemsResult2 = {
   furniture: ListingItem[];
   furnitureTotal: number;
@@ -86,7 +50,7 @@ type FurnitureItemsParams = {
 
 
 async function fetchFurnitureItems2(params: FurnitureItemsParams) {
-  return graphqlClient.request<FurnitureItemsResult2>(PAGINATED_FURNITURE_QUERY, params);
+  return apiClient.get<FurnitureItemsResult2>("/api/catalogue/furniture", params);
 }
 
 export function furnitureItemsQueryOptions2(params: FurnitureItemsParams) {

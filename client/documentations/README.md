@@ -79,7 +79,7 @@ The app will be available at `your-client-endpoint>`.
 Create a `.env` file in the `client/` directory based on `.env.example`:
 
 ```env
-VITE_GRAPHQL_ENDPOINT=<your-gateway-graphql-url>
+VITE_API_GATEWAY_URL=<your-gateway-url>
 VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id
 ```
 
