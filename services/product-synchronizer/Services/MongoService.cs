@@ -7,6 +7,7 @@ public class MongoService
 public MongoService()
     {
         var connectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION");
+        Console.WriteLine("DEBUG ENV VALUE: " + (connectionString ?? "NULL"));
 
         if (string.IsNullOrEmpty(connectionString))
             throw new Exception("MONGO_CONNECTION is not set");
