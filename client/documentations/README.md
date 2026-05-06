@@ -70,7 +70,7 @@ Fill in your `.env` values (see [Environment Variables](#environment-variables) 
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`.
+The app will be available at `your-client-endpoint>`.
 
 ---
 
@@ -79,7 +79,7 @@ The app will be available at `http://localhost:5173`.
 Create a `.env` file in the `client/` directory based on `.env.example`:
 
 ```env
-VITE_API_GATEWAY_URL=http://localhost:3000
+VITE_GRAPHQL_ENDPOINT=<your-gateway-graphql-url>
 VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id
 ```
 

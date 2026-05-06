@@ -1,24 +1,10 @@
 import { GraphQLClient } from "graphql-request";
 
-function resolveGraphQLEndpoint(rawEndpoint: string | undefined) {
-  const endpoint = (rawEndpoint ?? "/graphql").trim();
+const GRAPHQL_ENDPOINT = import.meta.env.VITE_GRAPHQL_ENDPOINT?.trim();
 
-  if (/^https?:\/\//i.test(endpoint)) {
-    return endpoint;
-  }
-
-  if (endpoint.startsWith("/")) {
-    if (typeof window !== "undefined") {
-      return new URL(endpoint, window.location.origin).toString();
-    }
-
-    return `http://localhost:5173${endpoint}`;
-  }
-
-  return `http://${endpoint}`;
+if (!GRAPHQL_ENDPOINT) {
+  throw new Error("VITE_GRAPHQL_ENDPOINT is required");
 }
-
-const GRAPHQL_ENDPOINT = resolveGraphQLEndpoint(import.meta.env.VITE_GRAPHQL_ENDPOINT);
 
 const fetchWithCredentials: typeof fetch = (input, init) => {
   return fetch(input, {

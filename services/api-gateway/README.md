@@ -3,7 +3,7 @@
 api-gateway:
   build: ./services/api-gateway
   ports:
-    - "3100:3000" # external:internal
+    - "4200:3000" # external:internal
   environment:
     - NODE_ENV=production
 
@@ -14,4 +14,4 @@ ___
 docker build -t api-gateway:latest ./services/api-gateway
 
 ## Run the container
-docker run -p 3000:3000 api-gateway:latest
+docker run -p 4200:3000 api-gateway:latest
