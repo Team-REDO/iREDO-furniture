@@ -1,19 +1,29 @@
-﻿using Microsoft.AspNetCore.Connections;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
+﻿
+using System.Linq;
 using System.Text;
 using System.Text.Json;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using System.Collections.Generic;
 
 public class Worker : BackgroundService
 {
+    private readonly ILogger<Worker> _logger;
+    private readonly MongoService _mongo;
     private IConnection _connection;
     private IModel _channel;
 
-    public Worker()
+public Worker(ILogger<Worker> logger, MongoService mongo)
     {
+        _logger = logger;
+        _mongo = mongo;
+
+        var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "rabbitmq";
+        var queueName = Environment.GetEnvironmentVariable("QUEUE_NAME") ?? "listing_queue";
+
         var factory = new ConnectionFactory()
         {
-            HostName = "rabbitmq"
+            HostName = host
         };
 
         int retries = 5;
@@ -22,115 +32,145 @@ public class Worker : BackgroundService
         {
             try
             {
-                Console.WriteLine("Connecting to RabbitMQ...");
+                _logger.LogInformation("Connecting to RabbitMQ...");
+
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
-                Console.WriteLine("Connected!");
 
-                // Declare queues AFTER successful connection
+                _logger.LogInformation("Connected!");
+
                 _channel.QueueDeclare(
-                    queue: "inventory_check_queue",
+                    queue: queueName,
                     durable: false,
                     exclusive: false,
                     autoDelete: false,
                     arguments: null
                 );
 
-                _channel.QueueDeclare(
-                    queue: "inventory_result_queue",
-                    durable: false,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null
-                );
-
-                return; 
+                return;
             }
             catch
             {
                 retries--;
-                Console.WriteLine("Failed to connect. Retrying in 5 seconds...");
+                _logger.LogWarning("Retrying in 5 seconds...");
                 Thread.Sleep(5000);
             }
         }
 
         throw new Exception("Could not connect to RabbitMQ");
-    
-
-
-    _connection = factory.CreateConnection();
-        _channel = _connection.CreateModel();
-
-        _channel.QueueDeclare(
-            queue: "inventory_check_queue",
-            durable: false,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null
-        );
-
-        _channel.QueueDeclare(
-            queue: "inventory_result_queue",
-            durable: false,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null
-        );
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var queueName = Environment.GetEnvironmentVariable("QUEUE_NAME") ?? "listing_queue";
+
         var consumer = new EventingBasicConsumer(_channel);
 
-        consumer.Received += (model, ea) =>
+        consumer.Received += async (model, ea) =>
         {
-            Console.WriteLine("Message received");
-
-            var body = ea.Body.ToArray();
-            var json = Encoding.UTF8.GetString(body);
-
-            Console.WriteLine("Raw message: " + json);
-
-            var request = JsonSerializer.Deserialize<InventoryCheckRequest>(
-                json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            if (request == null)
+            try
             {
-                Console.WriteLine("Invalid request");
-                return;
+                _logger.LogInformation("Message received");
+
+                var json = Encoding.UTF8.GetString(ea.Body.ToArray());
+
+                var input = JsonSerializer.Deserialize<IncomingListing>(
+                    json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (input == null)
+                {
+                    _logger.LogWarning("Invalid input");
+                    _channel.BasicNack(ea.DeliveryTag, false, false);
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(input.EventType))
+                {
+                    _logger.LogWarning("Missing eventType");
+                    _channel.BasicNack(ea.DeliveryTag, false, false);
+                    return;
+                }
+
+                switch (input.EventType)
+                {
+                    case "ListingCreated":
+                    case "ListingUpdated":
+                        await HandleUpsert(input);
+                        break;
+
+                    case "ListingDeleted":
+                        await _mongo.DeleteAsync(input.Guid);
+                        break;
+
+                    default:
+                        _logger.LogWarning("Unknown event type: {EventType}", input.EventType);
+                        break;
+                }
+
+                _channel.BasicAck(ea.DeliveryTag, false);
             }
-
-            var (available, reason) = FakeInventory.Check(request.ProductId, request.Quantity);
-
-            var result = new InventoryResult
+            catch (Exception ex)
             {
-                ProductId = request.ProductId,
-                OrderId = request.OrderId,
-                IsAvailable = available,
-                Reason = reason
-            };
-
-            var responseJson = JsonSerializer.Serialize(result);
-
-            Console.WriteLine("Publishing result: " + responseJson);
-
-            var responseBytes = Encoding.UTF8.GetBytes(responseJson);
-
-            _channel.BasicPublish(
-                exchange: "",
-                routingKey: "inventory_result_queue",
-                basicProperties: null,
-                body: responseBytes
-            );
+                _logger.LogError(ex, "Processing failed");
+                _channel.BasicNack(ea.DeliveryTag, false, true);
+            }
         };
 
         _channel.BasicConsume(
-            queue: "inventory_check_queue",
-            autoAck: true,
+            queue: queueName,
+            autoAck: false,
             consumer: consumer
         );
 
         return Task.CompletedTask;
     }
+
+    private async Task HandleUpsert(IncomingListing input)
+    {
+        var details = input.ListingDetails ?? new ListingDetails();
+
+        var color = details.Colors?.FirstOrDefault();
+        var sub = details.SubCategories?.FirstOrDefault();
+
+        var post = new SalesPost
+        {
+            Guid = input.Guid,
+            PersonId = input.PersonGUID,
+            Title = details.Title,
+            Description = details.Description,
+            Quantity = details.Quantity,
+            Price = details.Price,
+            Condition = details.Condition,
+            ZipCode = details.City,
+
+            Color = color != null
+                ? new ColorDb
+                {
+                    Name = color.Name,
+                    Href = color.Href
+                }
+                : new ColorDb(),
+
+            Category = sub != null
+                ? new CategoryDb
+                {
+                    Name = sub.Category.Name,
+                    Subcat = new SubCategoryDb
+                    {
+                        Name = sub.Name
+                    }
+                }
+                : new CategoryDb(),
+
+            Images = details.Images?
+                .Select(url => new ImageDb { Url = url })
+                .ToList() ?? new List<ImageDb>()
+        };
+
+        await _mongo.UpsertAsync(post);
+
+        _logger.LogInformation("Upserted {Guid}", post.Guid);
+    }
+
 }
