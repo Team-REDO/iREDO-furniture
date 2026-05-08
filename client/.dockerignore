@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env.example
+README.md
+.DS_Store
+dist
+.eslintignore
+.eslintrc.json
+vitest.config.ts
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.turbo

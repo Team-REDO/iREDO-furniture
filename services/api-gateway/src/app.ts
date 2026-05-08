@@ -13,6 +13,10 @@ const CORS_OPTIONS = {
 app.use(cors(CORS_OPTIONS));
 app.use(express.json());
 
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
 app.options("/graphql", cors(CORS_OPTIONS));
 
 app.all("/graphql", async (req, res, next) => {

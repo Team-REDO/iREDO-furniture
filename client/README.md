@@ -71,3 +71,38 @@ export default defineConfig([
   },
 ])
 ```
+
+## Docker
+
+### Build and run the container standalone
+To run the client container independently (e.g., when the gateway is running locally on your machine):
+
+```bash
+docker build --build-arg VITE_API_GATEWAY_URL=http://host.docker.internal:3100 \
+  -t iredo-furniture-client:latest ./client
+
+docker run -p 5173:80 iredo-furniture-client:latest
+```
+
+**Note:** Vite environment variables must be passed as `--build-arg` during the build step, not as `-e` at runtime, because they are baked into the JavaScript bundle during the build process.
+
+The app will be available at `http://localhost:5173`. The `host.docker.internal` host allows the container to reach services running on your host machine.
+
+### Run with Docker Compose
+From the project root:
+
+```bash
+docker compose up
+```
+
+This starts both the client and the API gateway in containers. The client will be available at `http://localhost:5173` and communicate with the gateway at `http://localhost:3100`.
+
+To rebuild the images:
+```bash
+docker compose up --build
+```
+
+To stop the containers:
+```bash
+docker compose down
+```
