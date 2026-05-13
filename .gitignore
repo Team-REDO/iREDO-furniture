@@ -5,7 +5,7 @@
 node_modules/
 
 # C# files
-
+.vs/
 # Java files
 
 # Testing files
