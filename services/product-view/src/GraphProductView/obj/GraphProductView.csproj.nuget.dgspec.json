@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\ander\\Ny mappe\\GraphProductView\\GraphProductView.csproj": {}
+    "C:\\Users\\ander\\iRedo\\iREDO-furniture\\services\\product-view\\src\\GraphProductView\\GraphProductView.csproj": {}
   },
   "projects": {
-    "C:\\Users\\ander\\Ny mappe\\GraphProductView\\GraphProductView.csproj": {
+    "C:\\Users\\ander\\iRedo\\iREDO-furniture\\services\\product-view\\src\\GraphProductView\\GraphProductView.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\ander\\Ny mappe\\GraphProductView\\GraphProductView.csproj",
+        "projectUniqueName": "C:\\Users\\ander\\iRedo\\iREDO-furniture\\services\\product-view\\src\\GraphProductView\\GraphProductView.csproj",
         "projectName": "GraphProductView",
-        "projectPath": "C:\\Users\\ander\\Ny mappe\\GraphProductView\\GraphProductView.csproj",
+        "projectPath": "C:\\Users\\ander\\iRedo\\iREDO-furniture\\services\\product-view\\src\\GraphProductView\\GraphProductView.csproj",
         "packagesPath": "C:\\Users\\ander\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\ander\\Ny mappe\\GraphProductView\\obj\\",
+        "outputPath": "C:\\Users\\ander\\iRedo\\iREDO-furniture\\services\\product-view\\src\\GraphProductView\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
