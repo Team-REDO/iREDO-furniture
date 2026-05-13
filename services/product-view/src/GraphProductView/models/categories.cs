@@ -14,7 +14,7 @@ namespace Categories
         [BsonElement("name")]
         public string? Name { get; set;}
 
-        [BsonElement("subcat")]
-        public Subcategory? subcat { get; set; }
+        [BsonElement("subcats")]
+        public List<Subcategory>? subcats { get; set; }
     }
 }
