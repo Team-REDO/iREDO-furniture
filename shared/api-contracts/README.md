@@ -13,18 +13,21 @@
 
 ## **API Definitions**
 Examples:
-1. REST
-2. GraphQL
+1. [REST] [rest]
+2. [GraphQL] [graphql]
+3. gRPC [grpc]
 
-## 1. REST API - EXAMPLE
+4. ** [- Optionals for API's -] ** [optionals]
 
+## 1. REST API - EXAMPLE [rest]
+### **Endpoints**
 | **Header**        | Required | Example          |
 | ------------- | -------- | ---------------- |
 | Authorization | Yes      | Bearer xxx       |
 | Content-Type  | Yes      | application/json |
 
-### **Endpoints**
-| **Method** | Path            | Description     |
+
+| **Method** | **Path**            | Description     |
 | ------ | --------------- | --------------- |
 | GET    | /customers/{id} | Fetch customer  |
 | POST   | /customers      | Create customer |
@@ -58,9 +61,62 @@ Examples:
   "message": "Customer does not exist"
 }`
 
-## **2. GraphQL API **
-Endpoint
+## ** 2. GraphQL API - EXAMPLE ** [graphql]
+### **Endpoint**
+`/graphql`
 
+### **Queries**
+`query GetCustomer($id: ID!) {
+  customer(id: $id) {
+    id
+    name
+    email
+  }
+}`
+
+### **Mutations**
+`mutation CreateCustomer($input: CustomerInput!) {
+  createCustomer(input: $input) {
+    id
+  }
+}`
+
+### **Error Format**
+`{
+  "errors": [
+    {
+      "message": "Unauthorized"
+    }
+  ]
+}`
+
+## ** 3. gRPC API - EXAMPLE ** [grpc]
+#### ** Service Definition **
+##### ** Proto **
+`service CustomerService {
+  rpc GetCustomer (CustomerRequest) returns (CustomerResponse);
+}`
+
+### **Request Message**
+##### ** Proto **
+`message CustomerRequest {
+  string id = 1;
+}`
+
+### **Response Message**
+##### ** Proto **
+`message CustomerResponse {
+  string id = 1;
+  string name = 2;
+}`
+
+## ** 4. Optional Add-ons ** [optionals]
+
+You can extend with:
+
+- OpenAPI/Swagger links
+- Diagrams
+  ... But these are not necessary
 
 
 
