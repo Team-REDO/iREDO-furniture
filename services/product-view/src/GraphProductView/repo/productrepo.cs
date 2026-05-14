@@ -22,7 +22,6 @@ namespace productrepo
             catch (Exception ex)
             {
                 // Log the error - schema mismatch or connection issues
-                Console.WriteLine(ex.ToString());
                 throw new Exception($"Database query failed: {ex.Message}", ex);
             }
         }
@@ -36,7 +35,6 @@ namespace productrepo
             catch (Exception ex)
             {
                 // Log the error - schema mismatch or connection issues
-                Console.WriteLine(ex.ToString());
                 throw new Exception($"Database query failed for ID {id}: {ex.Message}", ex);
             }
         }

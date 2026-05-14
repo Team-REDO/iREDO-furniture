@@ -3,7 +3,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Subcategories
 {
-    [BsonIgnoreExtraElements]
     public class Subcategory
     {
         [BsonId]                  // optional, if _id exists

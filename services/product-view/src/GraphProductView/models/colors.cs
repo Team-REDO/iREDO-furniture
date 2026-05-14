@@ -3,7 +3,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Colors
 {
-    [BsonIgnoreExtraElements]
     public class Color
     {
         [BsonId]                  // optional, if _id exists

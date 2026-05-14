@@ -6,13 +6,13 @@ using products;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var mongoConnection = builder.Configuration["DB_CONNECTION"];
+var mongoConnection = builder.Configuration["database"];
 
 builder.Services.AddSingleton<IMongoCollection<Furniture>>(sp =>
 {
     var client = new MongoClient(mongoConnection);
     var database = client.GetDatabase("furnituredatabase");
-    return database.GetCollection<Furniture>("Furniture");
+    return database.GetCollection<Furniture>("furniture");
 });
 
 builder.Services.AddSingleton<ProductRepo>();
@@ -50,7 +50,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.Run();
-
 
 
 

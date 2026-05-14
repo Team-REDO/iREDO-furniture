@@ -10,7 +10,6 @@ using Subcategories;
 
 namespace products
 {
-[BsonIgnoreExtraElements]
 public class Furniture
 {
     [BsonId]
@@ -47,9 +46,6 @@ public class Furniture
     [BsonElement("zip_code")]
     public string? zip_code { get; set; }
 
-    [BsonElement("city")]
-    public string? city { get; set; }
-
     [BsonElement("status")]
     public Status? status { get; set; }
 
@@ -58,9 +54,6 @@ public class Furniture
 
     [BsonElement("categories")]
     public List<Category>? categories { get; set; }
-
-    [BsonElement("subcategory")]
-    public Subcategory? subcategory { get; set; }
 
     [BsonElement("images")]
     public List<Image>? Images { get; set; } = new List<Image>();

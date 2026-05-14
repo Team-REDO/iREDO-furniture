@@ -3,7 +3,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Images
 {
-    [BsonIgnoreExtraElements]
     public class Image
     {
         [BsonId]                  // optional, if _id exists
