@@ -13,12 +13,12 @@
 
 ## **API Definitions**
 Examples:
-1. [REST](rest-api)
+1. [REST]([rest-api](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#1-rest-api---example)
 2. [GraphQL](graphql-api)
 3. [gRPC](grpc-api)
    
 More:
-[- Optionals for API's -](optional-adds)
+[- Optionals for API's -](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#optional-adds)
 
 ## 1. REST API - EXAMPLE
 ### **Endpoints**
