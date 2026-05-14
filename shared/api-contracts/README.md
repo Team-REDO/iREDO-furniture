@@ -17,8 +17,8 @@ Examples:
 2. [GraphQL](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#2-graphql-api---example)
 3. [gRPC](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#3-grpc-api---example)
    
-More:
-[- Optionals for API's -](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#optional-adds)
+More: 
+[Optional add-ons](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#optional-adds)
 
 ## 1. REST API - EXAMPLE
 ### **Endpoints**
@@ -117,7 +117,8 @@ You can extend with:
 
 - OpenAPI/Swagger links
 - Diagrams
-  ... But these are not necessary
+#
+** ... But these are not necessary **
 
 
 
