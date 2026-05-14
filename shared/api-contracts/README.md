@@ -13,7 +13,7 @@
 
 ## **API Definitions**
 Examples:
-1. [REST](rest) 
+1. [REST][rest]
 2. [GraphQL](graphql)
 3. gRPC [grpc]
 
