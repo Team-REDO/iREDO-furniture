@@ -15,7 +15,7 @@
 Examples:
 1. [REST](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#1-rest-api---example)
 2. [GraphQL](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#2-graphql-api---example)
-3. [gRPC](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#1-grpc-api---example)
+3. [gRPC](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#3-grpc-api---example)
    
 More:
 [- Optionals for API's -](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#optional-adds)
