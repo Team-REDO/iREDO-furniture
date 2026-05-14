@@ -1,0 +1,116 @@
+# Visual Studio / .NET
+# Build directories
+bin/
+obj/
+out/
+**/bin/
+**/obj/
+
+# Visual Studio workspace
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# NuGet
+.nuget/
+packages/
+packages.lock.json
+*.nupkg
+*.snupkg
+project.lock.json
+
+# Publish
+publish/
+*.Publish.xml
+
+# ASP.NET / appsettings / secrets
+appsettings.Development.json
+appsettings.*.Local*
+local.settings.json
+secrets.json
+secrets.*.json
+
+# Logs, databases, and temporary files
+logs/
+TestResults/
+*.log
+*.err
+*.sqlite
+*.db
+*.mdf
+*.ldf
+App_Data/
+
+# Test coverage
+coverage/
+*.coverage
+coverage*.xml
+
+# Certificates and keys
+*.pfx
+*.p12
+*.key
+*.pem
+
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Node / GraphQL / Frontend (if present)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+package-lock.json
+dist/
+build/
+
+# GraphQL artifacts & codegen
+graphql.schema.json
+graphql.schema.*.json
+schema.graphql
+.graphqlrc
+.graphqlrc.*
+.graphqlconfig
+.graphqlconfig.*
+.graphql-cache
+.graphql-cache.*
+.graphqlcodegen
+/.graphql-codegen/
+codegen.yml
+__generated__/
+generated/
+*.graphql.ts
+*.graphql.js
+*.graphql.d.ts
+
+# Docker / env files (local/dev overrides and secrets)
+.env
+.env.*
+env.local
+env.development.local
+docker-compose.override.yml
+
+# Editor and tooling
+*.sln.ide
+*.userprefs
+*.log
+*.tmp
+*.temp
+*.bak
+
+# Optional: lockfiles or editor backups
+*.kate-swp
+
