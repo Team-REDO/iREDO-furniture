@@ -1,5 +1,5 @@
 # _- TEMPLATE -_
-# **API Contract** 
+## **API Contract** 
 
 ## **Service Overview**
 | **Field**               | **Value**                                   |
@@ -116,9 +116,9 @@ More:
 You can extend with:
 
 - OpenAPI/Swagger links
-- Diagrams
-#
-** ... But these are not necessary **
+- Diagrams?
+
+**^... But add-ons are not necessary for contract - only a nice to have!**
 
 
 
