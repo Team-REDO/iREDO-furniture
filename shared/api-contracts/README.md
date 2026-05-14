@@ -18,7 +18,7 @@ Examples:
 3. [gRPC](grpc-api)
    
 More:
-4. [ ** - Optionals for API's - **](4.-optional-add-ons)
+4. [- Optionals for API's -](4.-optional-add-ons)
 
 ## 1. REST API - EXAMPLE
 ### **Endpoints**
