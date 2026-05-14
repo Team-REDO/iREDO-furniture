@@ -7,7 +7,9 @@
     "seed": "node seed.js",
     "seed:local": "node seed.js mongodb://localhost:27017",
     "seed:clear": "node seed.js --clear",
-    "seed:local:clear": "node seed.js mongodb://localhost:27017 --clear"
+    "seed:local:clear": "node seed.js mongodb://localhost:27017 --clear",
+    "seed:reset": "node seed.js --clear && node seed.js",
+    "seed:reset:local": "node seed.js mongodb://localhost:27017 --clear && node seed.js mongodb://localhost:27017"
   },
   "keywords": [
     "mongodb",

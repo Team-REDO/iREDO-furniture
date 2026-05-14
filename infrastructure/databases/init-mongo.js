@@ -13,25 +13,20 @@ const seedData = [
     price: 1890,
     condition: "like-new",
     zip_code: "0150",
-    city: "Oslo",
     status: {
-      is_active: true,
-      is_sold: false
+      removed: false,
+      date: null
     },
     color: {
+      id: "gray",
       name: "Gray",
-      hex: "#808080"
+      href: "#808080"
     },
-    category: {
-      name: "Living Room"
-    },
-    subcategory: {
-      name: "Sofas"
-    },
+    categories: [{ id: "living-room", name: "Living Room", subcats: [{ id: "sofas", name: "Sofas" }] }],
     images: [
-      { url: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80", alt: "Sofa front view" },
-      { url: "https://images.unsplash.com/photo-1567016432779-094069958ea5?auto=format&fit=crop&w=1200&q=80", alt: "Sofa side view" },
-      { url: "https://images.unsplash.com/photo-1616486701797-0f33f61038aa?auto=format&fit=crop&w=1200&q=80", alt: "Sofa detail" }
+      { id: "img-sofa-1", url: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80" },
+      { id: "img-sofa-2", url: "https://images.unsplash.com/photo-1567016432779-094069958ea5?auto=format&fit=crop&w=1200&q=80" },
+      { id: "img-sofa-3", url: "https://images.unsplash.com/photo-1616486701797-0f33f61038aa?auto=format&fit=crop&w=1200&q=80" }
     ]
   },
   {
@@ -45,14 +40,12 @@ const seedData = [
     price: 1390,
     condition: "good",
     zip_code: "00100",
-    city: "Helsinki",
-    status: { is_active: true, is_sold: false },
-    color: { name: "Navy Blue", hex: "#000080" },
-    category: { name: "Living Room" },
-    subcategory: { name: "Sofas" },
+    status: {  removed: false, date: null  },
+    color: { id: "navy-blue", name: "Navy Blue", href: "#000080" },
+    categories: [{ id: "living-room", name: "Living Room", subcats: [{ id: "sofas", name: "Sofas" }] }],
     images: [
-      { url: "https://images.unsplash.com/photo-1616486701797-0f33f61038aa?auto=format&fit=crop&w=1200&q=80", alt: "Sofa front view" },
-      { url: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=80", alt: "Sofa detail" }
+      { id: "img-sofa-4", url: "https://images.unsplash.com/photo-1616486701797-0f33f61038aa?auto=format&fit=crop&w=1200&q=80" },
+      { id: "img-sofa-5", url: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=80" }
     ]
   },
   {
@@ -66,14 +59,12 @@ const seedData = [
     price: 749,
     condition: "excellent",
     zip_code: "10115",
-    city: "Berlin",
-    status: { is_active: true, is_sold: false },
-    color: { name: "Burgundy", hex: "#800020" },
-    category: { name: "Living Room" },
-    subcategory: { name: "Armchairs" },
+    status: { removed: false, date: null },
+    color: { id: "burgundy", name: "Burgundy", href: "#800020" },
+    categories: [{ id: "living-room", name: "Living Room", subcats: [{ id: "armchairs", name: "Armchairs" }] }],
     images: [
-      { url: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&w=1200&q=80", alt: "Armchair front view" },
-      { url: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80", alt: "Armchair detail" }
+      { id: "img-armchair-1", url: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&w=1200&q=80" },
+      { id: "img-armchair-2", url: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80" }
     ]
   },
   {
@@ -87,13 +78,11 @@ const seedData = [
     price: 420,
     condition: "very-good",
     zip_code: "1200",
-    city: "Lisbon",
-    status: { is_active: true, is_sold: false },
-    color: { name: "Natural", hex: "#D2B48C" },
-    category: { name: "Living Room" },
-    subcategory: { name: "Armchairs" },
+    status: { removed: false, date: null },
+    color: { id: "natural", name: "Natural", href: "#D2B48C" },
+    categories: [{ id: "living-room", name: "Living Room", subcats: [{ id: "armchairs", name: "Armchairs" }] }],
     images: [
-      { url: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?auto=format&fit=crop&w=1200&q=80", alt: "Rattan chair" }
+      { id: "img-chair-1", url: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?auto=format&fit=crop&w=1200&q=80" }
     ]
   },
   {
@@ -107,13 +96,11 @@ const seedData = [
     price: 1200,
     condition: "excellent",
     zip_code: "3100",
-    city: "Copenhagen",
-    status: { is_active: true, is_sold: false },
-    color: { name: "Walnut", hex: "#654321" },
-    category: { name: "Dining Room" },
-    subcategory: { name: "Tables" },
+    status: { removed: false, date: null },
+    color: { id: "walnut", name: "Walnut", href: "#654321" },
+    categories: [{ id: "dining-room", name: "Dining Room", subcats: [{ id: "tables", name: "Tables" }] }],
     images: [
-      { url: "https://images.unsplash.com/photo-1551632786-de41ec4a5fcd?auto=format&fit=crop&w=1200&q=80", alt: "Dining table" }
+      { id: "img-table-1", url: "https://images.unsplash.com/photo-1551632786-de41ec4a5fcd?auto=format&fit=crop&w=1200&q=80" }
     ]
   },
   {
@@ -127,13 +114,11 @@ const seedData = [
     price: 350,
     condition: "good",
     zip_code: "1050",
-    city: "Brussels",
-    status: { is_active: true, is_sold: false },
-    color: { name: "White", hex: "#FFFFFF" },
-    category: { name: "Storage" },
-    subcategory: { name: "Shelves" },
+    status: { removed: false, date: null },
+    color: { id: "white", name: "White", href: "#FFFFFF" },
+    categories: [{ id: "storage", name: "Storage", subcats: [{ id: "shelves", name: "Shelves" }] }],
     images: [
-      { url: "https://images.unsplash.com/photo-1593642632630-e74f497e2d6c?auto=format&fit=crop&w=1200&q=80", alt: "Bookshelf" }
+      { id: "img-bookshelf-1", url: "https://images.unsplash.com/photo-1593642632630-e74f497e2d6c?auto=format&fit=crop&w=1200&q=80" }
     ]
   }
 ];
@@ -142,11 +127,11 @@ const seedData = [
 const db = db.getSiblingDB('furnituredatabase');
 
 // Check if collection already has data
-const count = db.Furniture.countDocuments();
+const count = db.furniture.countDocuments();
 
 if (count === 0) {
   // Insert seed data
-  db.Furniture.insertMany(seedData);
+  db.furniture.insertMany(seedData);
   print(`✓ Successfully seeded ${seedData.length} furniture items to MongoDB`);
 } else {
   print(`ℹ Database already contains ${count} items. Skipping seed.`);

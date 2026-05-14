@@ -84,7 +84,7 @@ async function seedDatabase() {
     log.info('Connected to MongoDB');
 
     const db = client.db('furnituredatabase');
-    const collection = db.collection('Furniture');
+    const collection = db.collection('furniture');
 
     if (shouldClear) {
       const deleteResult = await collection.deleteMany({});

@@ -14,6 +14,7 @@ This directory contains MongoDB initialization and seeding utilities for the iRE
 ### Automatic Seeding (Recommended)
 
 When you run `docker compose up`, the MongoDB container automatically:
+
 1. Starts the MongoDB service
 2. Creates the `furnituredatabase` database
 3. Runs `init-mongo.js` which seeds the `Furniture` collection with test data
@@ -30,6 +31,32 @@ docker compose up --build
 ### Manual Seeding (if needed)
 
 If you need to reseed the database or run seeding manually:
+
+### Reset the Docker volume and load fresh seed data
+
+If the old data is stored in the Docker Mongo volume, remove the volume first and then start the stack again:
+
+```bash
+docker compose down -v
+docker compose up --build -d
+```
+
+That deletes the old `mongodb-data` volume, so MongoDB starts empty and runs `init-mongo.js` again with the latest seed data.
+
+If you only want to clear and repopulate the collection without deleting the volume:
+
+```bash
+cd infrastructure/databases
+npm run seed:reset:local
+```
+
+Or from inside Docker:
+
+```bash
+docker exec iredo-mongodb mongosh furnituredatabase --eval "db.Furniture.deleteMany({})"
+cd infrastructure/databases
+npm run seed:reset
+```
 
 #### Option 1: Using npm scripts (easiest)
 
@@ -51,6 +78,9 @@ npm run seed:clear
 
 # Clear and reseed localhost
 npm run seed:local:clear
+
+# Reset and reseed localhost in one step
+npm run seed:reset:local
 ```
 
 #### Option 2: Direct node command
@@ -84,6 +114,7 @@ The seed includes 6 furniture items:
 6. **White Bookshelf Unit** - Brussels, €350
 
 Each item includes:
+
 - Product details (title, description, size, price, condition)
 - Category & subcategory information
 - Color information
@@ -95,6 +126,7 @@ Each item includes:
 ## MongoDB Connection
 
 ### Docker Environment
+
 - **Host**: `mongodb` (service name)
 - **Port**: `27017`
 - **Connection String**: `mongodb://mongodb:27017`
@@ -102,6 +134,7 @@ Each item includes:
 - **Collection**: `Furniture`
 
 ### Local Environment
+
 - **Host**: `localhost`
 - **Port**: `27017`
 - **Connection String**: `mongodb://localhost:27017`
@@ -123,8 +156,8 @@ Each item includes:
   zip_code: string,
   city: string,
   status: {
-    is_active: boolean,
-    is_sold: boolean
+    removed: bool,
+    date?: dateTime
   },
   color: {
     name: string,
@@ -146,6 +179,7 @@ Each item includes:
 ## Troubleshooting
 
 ### "Database already contains X items. Skipping seed."
+
 The auto-seed script only runs if the collection is empty. To reseed:
 
 ```bash
@@ -158,6 +192,7 @@ docker exec iredo-mongodb mongosh furnituredatabase --eval "db.Furniture.deleteM
 ```
 
 ### Connection refused
+
 Ensure MongoDB is running:
 
 ```bash
@@ -170,6 +205,7 @@ sudo systemctl start mongod  # Linux/Mac
 ```
 
 ### Script permission denied (Linux/Mac)
+
 Make the script executable:
 
 ```bash
@@ -183,6 +219,7 @@ To add more test data:
 1. Edit `seed-data.json` with new furniture items following the schema above
 2. Clear the database: `npm run seed:clear`
 3. Or manually call:
+
    ```bash
    node seed.js --clear
    ```
@@ -207,4 +244,3 @@ docker exec iredo-mongodb mongosh furnituredatabase --eval "db.Furniture.find().
 - The init script only runs **once** when the container is first created. Stopping/restarting the container won't re-run it.
 - To re-seed after deletion, use the standalone `seed.js` script.
 - Test data uses real image URLs from Unsplash (requires internet connection to display).
-- All items are marked as `is_active: true` and `is_sold: false`.

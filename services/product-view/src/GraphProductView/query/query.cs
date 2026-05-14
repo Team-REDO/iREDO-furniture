@@ -9,9 +9,10 @@ namespace  queries
 
     // this method is used to get all the furniture items it's equipped with sorting, filtering and paging capabilities
     //  making it able to sort and filter on all elements like category, price or color
+    
+    // [UsePaging]
     [UseSorting]
     [UseFiltering]
-    [UsePaging]
     public async Task<List<Furniture>> GetAllFurniture(
         [Service] ProductRepo repo)
     {

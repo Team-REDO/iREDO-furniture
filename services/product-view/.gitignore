@@ -98,7 +98,6 @@ generated/
 
 # Docker / env files (local/dev overrides and secrets)
 .env
-.env.*
 env.local
 env.development.local
 docker-compose.override.yml

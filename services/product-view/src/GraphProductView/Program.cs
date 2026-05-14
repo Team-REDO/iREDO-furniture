@@ -6,13 +6,21 @@ using products;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var mongoConnection = builder.Configuration["database"];
+// Enable logging to console
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+var mongoConnection = builder.Configuration["MONGODB_CONNECTION"];
+Console.WriteLine($"[STARTUP] MongoDB connection: {mongoConnection}");
 
 builder.Services.AddSingleton<IMongoCollection<Furniture>>(sp =>
 {
     var client = new MongoClient(mongoConnection);
     var database = client.GetDatabase("furnituredatabase");
-    return database.GetCollection<Furniture>("furniture");
+    var collection = database.GetCollection<Furniture>("furniture");
+    Console.WriteLine($"[STARTUP] Connected to collection: furniture");
+    return collection;
 });
 
 builder.Services.AddSingleton<ProductRepo>();

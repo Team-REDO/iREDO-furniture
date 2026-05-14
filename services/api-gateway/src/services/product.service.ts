@@ -8,14 +8,23 @@ type ProductViewGraphQLResponse<T> = {
   errors?: Array<{ message: string }>;
 };
 
+type ProductViewFurnitureConnection = {
+  allFurniture: ProductViewVariables[];
+};
+
+
+
 type ProductViewFurniture = {
   title: string;
   price: number;
-  city: string;
-  category?: {
+  zip_code: string;
+  categories?: Array<{
     name?: string;
-  };
-  subcategory?: {
+    subcats?: Array<{
+      name?: string;
+    }>;
+  }>;
+  color?: {
     name?: string;
   };
   images?: Array<{
@@ -27,8 +36,12 @@ type ClientFurniture = {
   title: string;
   price: number;
   city: string;
-  category: string;
-  subcategory: string;
+  categories?: Array<{
+    name?: string;
+    subcats?: Array<{
+      name?: string;
+    }>;
+  }>;
   images: string[];
 };
 
@@ -37,11 +50,14 @@ const ALL_FURNITURE_QUERY = `
     allFurniture {
       title
       price
-      city
-      category {
+      zip_code
+      categories {
         name
+        subcats {
+          name
+        }
       }
-      subcategory {
+      color {
         name
       }
       images {
@@ -52,10 +68,21 @@ const ALL_FURNITURE_QUERY = `
 `;
 
 async function requestProductView<T>(query: string, variables?: ProductViewVariables) {
-  const response = await axios.post<ProductViewGraphQLResponse<T>>(PRODUCT_VIEW_GRAPHQL_URL, {
-    query,
-    variables,
-  });
+  const response = await axios.post<ProductViewGraphQLResponse<T>>(
+    PRODUCT_VIEW_GRAPHQL_URL,
+    {
+      query,
+      variables,
+    },
+    {
+      validateStatus: () => true,
+    },
+  );
+
+  if (response.status >= 400) {
+    const message = response.data?.errors?.[0]?.message ?? `Product View GraphQL request failed with status ${response.status}`;
+    throw new Error(message);
+  }
 
   if (response.data.errors?.length) {
     throw new Error(response.data.errors[0]?.message ?? "Product View GraphQL request failed");
@@ -65,6 +92,7 @@ async function requestProductView<T>(query: string, variables?: ProductViewVaria
     throw new Error("Product View GraphQL response was empty");
   }
 
+  console.log("RESPONSE:", response.data.data);
   return response.data.data;
 }
 
@@ -72,15 +100,14 @@ function transformFurniture(furniture: ProductViewFurniture[]): ClientFurniture[
   return furniture.map((item) => ({
     title: item.title,
     price: item.price,
-    city: item.city,
-    category: item.category?.name || "Uncategorized",
-    subcategory: item.subcategory?.name || item.category?.name || "Uncategorized",
+    city: item.zip_code,
+    categories: item.categories ?? [],
     images: item.images?.map((img) => img.url) || [],
   }));
 }
 
 export const getProducts = async () => {
-  const result = await requestProductView<{ allFurniture: ProductViewFurniture[] }>(ALL_FURNITURE_QUERY);
+  const result = await requestProductView<{ allFurniture: any[] }>(ALL_FURNITURE_QUERY);
   return {
     furniture: transformFurniture(result.allFurniture),
   };
