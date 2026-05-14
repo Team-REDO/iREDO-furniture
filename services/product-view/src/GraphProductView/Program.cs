@@ -1,3 +1,4 @@
+using HotChocolate.Execution;
 using MongoDB.Driver;
 using productrepo;
 using products;
@@ -5,11 +6,11 @@ using products;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var mongoConnectionString = builder.Configuration["MONGODB_CONNECTION_STRING"] ?? "mongodb://mongodb:27017";
+var mongoConnection = builder.Configuration["DB_CONNECTION"];
 
 builder.Services.AddSingleton<IMongoCollection<Furniture>>(sp =>
 {
-    var client = new MongoClient(mongoConnectionString);
+    var client = new MongoClient(mongoConnection);
     var database = client.GetDatabase("furnituredatabase");
     return database.GetCollection<Furniture>("Furniture");
 });
@@ -38,6 +39,15 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapGraphQL("/graphql");
+
+using (var scope = app.Services.CreateScope())
+{
+    var executorResolver = scope.ServiceProvider
+        .GetRequiredService<IRequestExecutorResolver>();
+    var executor = await executorResolver.GetRequestExecutorAsync();
+    var schema = executor.Schema.Print();
+    File.WriteAllText("schema.graphql", schema);
+}
 
 app.Run();
 

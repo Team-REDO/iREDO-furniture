@@ -56,8 +56,8 @@ public class Furniture
     [BsonElement("color")]
     public Color? color { get; set; }
 
-    [BsonElement("category")]
-    public Category? category { get; set; }
+    [BsonElement("categories")]
+    public List<Category>? categories { get; set; }
 
     [BsonElement("subcategory")]
     public Subcategory? subcategory { get; set; }
