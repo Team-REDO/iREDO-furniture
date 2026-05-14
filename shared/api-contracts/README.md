@@ -4,12 +4,12 @@
 ## **Service Overview**
 | **Field**               | **Value**                                   |
 | ------------------- | --------------------------------------- |
-| Service Name        |                                         |
-| Service Type        | REST / GraphQL / gRPC / Webhook / Event |
+| Service Name        | Customer Service                        |
+| Service Type        | REST / GraphQL / gRPC                   |
 | Version             | v1                                      |
 | Base URL / Endpoint | localhost:8080/customerservice          |
-| Authentication      | API Key / OAuth2 / JWT / mTLS           |
-| Contact developer   |                                         |
+| Authentication      | API Key / OAuth2 / JWT                  |
+| Contact developer   | Peter                                   |
 
 ## **API Definitions**
 Examples:
@@ -18,7 +18,7 @@ Examples:
 3. [gRPC](grpc-api)
    
 More:
-4. [- Optionals for API's -](4.-optional-add-ons)
+[- Optionals for API's -](optional-adds)
 
 ## 1. REST API - EXAMPLE
 ### **Endpoints**
@@ -62,7 +62,7 @@ More:
   "message": "Customer does not exist"
 }`
 
-## ** 2. GraphQL API - EXAMPLE ** 
+## 2. GraphQL API - EXAMPLE 
 ### **Endpoint**
 `/graphql`
 
@@ -91,8 +91,8 @@ More:
   ]
 }`
 
-## ** 3. gRPC API - EXAMPLE ** 
-#### ** Service Definition **
+## 3. gRPC API - EXAMPLE 
+#### **Service Definition**
 ##### ** Proto **
 `service CustomerService {
   rpc GetCustomer (CustomerRequest) returns (CustomerResponse);
@@ -111,7 +111,7 @@ More:
   string name = 2;
 }`
 
-## ** 4. Optional Add-ons **
+## **Optional Adds**
 
 You can extend with:
 
