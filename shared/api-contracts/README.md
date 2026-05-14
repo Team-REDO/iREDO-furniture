@@ -1,5 +1,4 @@
-# **API Contract**
-### - TEMPLATE -
+# **API Contract** _- TEMPLATE -_
 
 ## **Service Overview**
 | **Field**               | **Value**                                   |
