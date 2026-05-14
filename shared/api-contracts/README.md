@@ -13,13 +13,14 @@
 
 ## **API Definitions**
 Examples:
-1. [REST](#rest)
-2. [GraphQL](#graphql)
-3. [gRPC](#grpc)
+1. [REST](rest-api)
+2. [GraphQL](graphql-api)
+3. [gRPC](grpc-api)
+   
+More:
+4. [ ** - Optionals for API's - **](4.-optional-add-ons)
 
-4. ** [- Optionals for API's -] ** [optionals]
-
-## 1. REST API - EXAMPLE {#rest}
+## 1. REST API - EXAMPLE
 ### **Endpoints**
 | **Header**        | Required | Example          |
 | ------------- | -------- | ---------------- |
@@ -61,7 +62,7 @@ Examples:
   "message": "Customer does not exist"
 }`
 
-## ** 2. GraphQL API - EXAMPLE ** {#graphql}
+## ** 2. GraphQL API - EXAMPLE ** 
 ### **Endpoint**
 `/graphql`
 
@@ -90,7 +91,7 @@ Examples:
   ]
 }`
 
-## ** 3. gRPC API - EXAMPLE ** {#grpc}
+## ** 3. gRPC API - EXAMPLE ** 
 #### ** Service Definition **
 ##### ** Proto **
 `service CustomerService {
@@ -110,7 +111,7 @@ Examples:
   string name = 2;
 }`
 
-## ** 4. Optional Add-ons ** {#optionals}
+## ** 4. Optional Add-ons **
 
 You can extend with:
 
