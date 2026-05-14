@@ -5,11 +5,13 @@ using products;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var mongoConnectionString = builder.Configuration["MONGODB_CONNECTION_STRING"] ?? "mongodb://mongodb:27017";
+
 builder.Services.AddSingleton<IMongoCollection<Furniture>>(sp =>
 {
-    var client = new MongoClient("mongodb://localhost:27017");
+    var client = new MongoClient(mongoConnectionString);
     var database = client.GetDatabase("furnituredatabase");
-    return database.GetCollection<Furniture>("furniture");
+    return database.GetCollection<Furniture>("Furniture");
 });
 
 builder.Services.AddSingleton<ProductRepo>();

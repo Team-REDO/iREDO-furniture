@@ -1,37 +1,21 @@
 import { queryOptions } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import type { FurnitureCategory, ListingItem } from "@/features/furniture/types";
+import type { ListingItem } from "@/features/furniture/types";
 
 type FurnitureItemsResult = {
   furniture: ListingItem[];
   furnitureTotal?: number;
 };
 
-type FurnitureCategoriesResult = {
-  categories: FurnitureCategory[];
-};
-
 async function fetchFurnitureItems() {
-  const data = await apiClient.get<FurnitureItemsResult>("/api/catalogue/furniture");
+  const data = await apiClient.get<FurnitureItemsResult>("/api/products/furniture");
   return data.furniture;
-}
-
-async function fetchFurnitureCategories() {
-  const data = await apiClient.get<FurnitureCategoriesResult>("/api/catalogue/categories");
-  return data.categories;
 }
 
 export function furnitureItemsQueryOptions() {
   return queryOptions({
     queryKey: ["furniture"],
     queryFn: fetchFurnitureItems,
-  });
-}
-
-export function furnitureCategoriesQueryOptions() {
-  return queryOptions({
-    queryKey: ["categories"],
-    queryFn: fetchFurnitureCategories,
   });
 }
 
@@ -50,7 +34,7 @@ type FurnitureItemsParams = {
 
 
 async function fetchFurnitureItems2(params: FurnitureItemsParams) {
-  return apiClient.get<FurnitureItemsResult2>("/api/catalogue/furniture", params);
+  return apiClient.get<FurnitureItemsResult2>("/api/products/furniture", params);
 }
 
 export function furnitureItemsQueryOptions2(params: FurnitureItemsParams) {

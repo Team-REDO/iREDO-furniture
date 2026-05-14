@@ -1,6 +1,6 @@
-## Docker
+# Docker
 
-### Build the image
+## Build the image
 
 ```bash
 docker build -t iredo-furniture-api-gateway:latest ./services/api-gateway

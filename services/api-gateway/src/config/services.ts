@@ -17,4 +17,5 @@ export const SERVICES = {
 
 export const FRONTEND_ORIGIN = requireEnv("FRONTEND_ORIGIN");
 export const CATALOGUE_GRAPHQL_URL = requireEnv("CATALOGUE_GRAPHQL_URL");
+export const PRODUCT_VIEW_GRAPHQL_URL = requireEnv("PRODUCT_VIEW_GRAPHQL_URL");
 export const API_GATEWAY_PORT = requireEnv("API_GATEWAY_PORT");

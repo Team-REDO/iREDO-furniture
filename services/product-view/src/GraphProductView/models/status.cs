@@ -3,6 +3,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace GraphProductView.Models
 {
+    [BsonIgnoreExtraElements]
     public class Status
     {
         [BsonId]

@@ -3,14 +3,8 @@ services:
     container_name: iredo-api-gateway
     build:
       context: ./services/api-gateway
-    environment:
-      API_GATEWAY_PORT: ${API_GATEWAY_PORT}
-      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
-      CATALOGUE_GRAPHQL_URL: ${CATALOGUE_GRAPHQL_URL}
-      PRODUCT_SERVICE_URL: ${PRODUCT_SERVICE_URL}
-      CATALOGUE_SERVICE_URL: ${CATALOGUE_SERVICE_URL}
-      USER_SERVICE_URL: ${USER_SERVICE_URL}
-      PURCHASE_SERVICE_URL: ${PURCHASE_SERVICE_URL}
+    env_file:
+      - ./services/api-gateway/.env
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -26,15 +20,17 @@ services:
       - "27017:27017"
     volumes:
       - mongodb-data:/data/db
+      - ./infrastructure/databases/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js
     restart: unless-stopped
 
   product-view:
     container_name: iredo-product-view
     build:
       context: ./services/product-view/src/GraphProductView
+    env_file:
+      - ./services/product-view/.env
     environment:
       ASPNETCORE_URLS: http://+:8080
-      MONGODB_CONNECTION_STRING: ${MONGODB_CONNECTION_STRING}
     ports:
       - "4200:8080"
     depends_on:
@@ -48,6 +44,8 @@ services:
       context: ./client
       args:
         VITE_API_GATEWAY_URL: ${VITE_API_GATEWAY_URL}
+    env_file:
+      - ./client/.env
     depends_on:
       api-gateway:
         condition: service_healthy

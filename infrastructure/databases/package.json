@@ -1,0 +1,27 @@
+{
+  "name": "iredo-furniture-db-seeding",
+  "version": "1.0.0",
+  "description": "MongoDB seeding utilities for iREDO Furniture",
+  "main": "seed.js",
+  "scripts": {
+    "seed": "node seed.js",
+    "seed:local": "node seed.js mongodb://localhost:27017",
+    "seed:clear": "node seed.js --clear",
+    "seed:local:clear": "node seed.js mongodb://localhost:27017 --clear"
+  },
+  "keywords": [
+    "mongodb",
+    "seed",
+    "furniture",
+    "iredo"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "mongodb": "^6.3.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
