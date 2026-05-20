@@ -12,8 +12,8 @@ using user.Data;
 namespace user.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260504091212_CleanStart")]
-    partial class CleanStart
+    [Migration("20260520175455_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -48,7 +48,7 @@ namespace user.Migrations
                     b.Property<DateTime>("ModifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PersonDetailsId")
+                    b.Property<int>("PersonId")
                         .HasColumnType("int");
 
                     b.Property<string>("Street")
@@ -64,7 +64,7 @@ namespace user.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonDetailsId")
+                    b.HasIndex("PersonId")
                         .IsUnique();
 
                     b.ToTable("Addresses");
@@ -81,7 +81,12 @@ namespace user.Migrations
                     b.Property<Guid>("Guid")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Persons");
                 });
@@ -197,7 +202,7 @@ namespace user.Migrations
                     b.ToTable("SavedListPosts");
                 });
 
-            modelBuilder.Entity("UserService.DomainModels.User", b =>
+            modelBuilder.Entity("user.DomainModels.Role", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -205,28 +210,47 @@ namespace user.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "user"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "admin"
+                        });
                 });
 
             modelBuilder.Entity("UserService.DomainModels.Address", b =>
                 {
-                    b.HasOne("UserService.DomainModels.PersonDetails", "PersonDetails")
+                    b.HasOne("UserService.DomainModels.Person", "Person")
                         .WithOne("Address")
-                        .HasForeignKey("UserService.DomainModels.Address", "PersonDetailsId")
+                        .HasForeignKey("UserService.DomainModels.Address", "PersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PersonDetails");
+                    b.Navigation("Person");
+                });
+
+            modelBuilder.Entity("UserService.DomainModels.Person", b =>
+                {
+                    b.HasOne("user.DomainModels.Role", "Role")
+                        .WithMany("Persons")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("UserService.DomainModels.PersonDetails", b =>
@@ -275,6 +299,8 @@ namespace user.Migrations
 
             modelBuilder.Entity("UserService.DomainModels.Person", b =>
                 {
+                    b.Navigation("Address");
+
                     b.Navigation("Details")
                         .IsRequired();
 
@@ -283,14 +309,14 @@ namespace user.Migrations
                     b.Navigation("SavedLists");
                 });
 
-            modelBuilder.Entity("UserService.DomainModels.PersonDetails", b =>
-                {
-                    b.Navigation("Address");
-                });
-
             modelBuilder.Entity("UserService.DomainModels.SavedList", b =>
                 {
                     b.Navigation("Posts");
+                });
+
+            modelBuilder.Entity("user.DomainModels.Role", b =>
+                {
+                    b.Navigation("Persons");
                 });
 #pragma warning restore 612, 618
         }

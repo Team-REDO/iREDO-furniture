@@ -45,7 +45,7 @@ namespace user.Migrations
                     b.Property<DateTime>("ModifiedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("PersonDetailsId")
+                    b.Property<int>("PersonId")
                         .HasColumnType("int");
 
                     b.Property<string>("Street")
@@ -61,7 +61,7 @@ namespace user.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PersonDetailsId")
+                    b.HasIndex("PersonId")
                         .IsUnique();
 
                     b.ToTable("Addresses");
@@ -78,7 +78,12 @@ namespace user.Migrations
                     b.Property<Guid>("Guid")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Persons");
                 });
@@ -194,15 +199,55 @@ namespace user.Migrations
                     b.ToTable("SavedListPosts");
                 });
 
+            modelBuilder.Entity("user.DomainModels.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "user"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "admin"
+                        });
+                });
+
             modelBuilder.Entity("UserService.DomainModels.Address", b =>
                 {
-                    b.HasOne("UserService.DomainModels.PersonDetails", "PersonDetails")
+                    b.HasOne("UserService.DomainModels.Person", "Person")
                         .WithOne("Address")
-                        .HasForeignKey("UserService.DomainModels.Address", "PersonDetailsId")
+                        .HasForeignKey("UserService.DomainModels.Address", "PersonId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PersonDetails");
+                    b.Navigation("Person");
+                });
+
+            modelBuilder.Entity("UserService.DomainModels.Person", b =>
+                {
+                    b.HasOne("user.DomainModels.Role", "Role")
+                        .WithMany("Persons")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("UserService.DomainModels.PersonDetails", b =>
@@ -251,6 +296,8 @@ namespace user.Migrations
 
             modelBuilder.Entity("UserService.DomainModels.Person", b =>
                 {
+                    b.Navigation("Address");
+
                     b.Navigation("Details")
                         .IsRequired();
 
@@ -259,14 +306,14 @@ namespace user.Migrations
                     b.Navigation("SavedLists");
                 });
 
-            modelBuilder.Entity("UserService.DomainModels.PersonDetails", b =>
-                {
-                    b.Navigation("Address");
-                });
-
             modelBuilder.Entity("UserService.DomainModels.SavedList", b =>
                 {
                     b.Navigation("Posts");
+                });
+
+            modelBuilder.Entity("user.DomainModels.Role", b =>
+                {
+                    b.Navigation("Persons");
                 });
 #pragma warning restore 612, 618
         }

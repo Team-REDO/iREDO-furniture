@@ -49,9 +49,13 @@ namespace user.Controllers
             {
                 try
                 {
+                    var defaultRole = _db.Roles
+                        .First(r => r.Name == "user");
+
                     var person = new Person
                     {
                         Guid = Guid.NewGuid(),
+                        RoleId = defaultRole.Id,
                         Details = new PersonDetails
                         {
                             Email = email,
@@ -111,23 +115,32 @@ namespace user.Controllers
             if (details == null)
                 return NotFound("User not found");
 
-            // 🔹 Create DB entity
-            var addressEntity = new Address
-            {
-                PersonDetailsId = details.Id,
-                Street = request.Street,
-                StreetNumber = request.StreetNumber,
-                FloorDoor = request.FloorDoor,
-                ZipCode = request.ZipCode,
-                City = request.City,
-                Country = request.Country,
-                ModifiedDate = DateTime.UtcNow
-            };
+            // Find existing address
+            var addressEntity = _db.Addresses
+                .FirstOrDefault(a => a.PersonId == details.PersonId);
 
-            _db.Addresses.Add(addressEntity);
+            // Create if missing
+            if (addressEntity == null)
+            {
+                addressEntity = new Address
+                {
+                    PersonId = details.PersonId
+                };
+
+                _db.Addresses.Add(addressEntity);
+            }
+
+            // Update values
+            addressEntity.Street = request.Street;
+            addressEntity.StreetNumber = request.StreetNumber;
+            addressEntity.FloorDoor = request.FloorDoor;
+            addressEntity.ZipCode = request.ZipCode;
+            addressEntity.City = request.City;
+            addressEntity.Country = request.Country;
+            addressEntity.ModifiedDate = DateTime.UtcNow;
+
             _db.SaveChanges();
 
-            // 🔹 Create response DTO
             var response = new AddressResponseDto
             {
                 Street = addressEntity.Street,
