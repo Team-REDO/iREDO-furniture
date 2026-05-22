@@ -3,7 +3,7 @@
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Import Project="$(NuGetPackageRoot)yarp.reverseproxy\2.3.0\buildTransitive\net8.0\Yarp.ReverseProxy.targets" Condition="Exists('$(NuGetPackageRoot)yarp.reverseproxy\2.3.0\buildTransitive\net8.0\Yarp.ReverseProxy.targets')" />
     <Import Project="$(NuGetPackageRoot)microsoft.aspnetcore.openapi\10.0.3\build\Microsoft.AspNetCore.OpenApi.targets" Condition="Exists('$(NuGetPackageRoot)microsoft.aspnetcore.openapi\10.0.3\build\Microsoft.AspNetCore.OpenApi.targets')" />
-    <Import Project="$(NuGetPackageRoot)hotchocolate.data\15.1.12\build\HotChocolate.Data.targets" Condition="Exists('$(NuGetPackageRoot)hotchocolate.data\15.1.12\build\HotChocolate.Data.targets')" />
-    <Import Project="$(NuGetPackageRoot)hotchocolate.aspnetcore\15.1.12\build\HotChocolate.AspNetCore.targets" Condition="Exists('$(NuGetPackageRoot)hotchocolate.aspnetcore\15.1.12\build\HotChocolate.AspNetCore.targets')" />
+    <Import Project="$(NuGetPackageRoot)hotchocolate.data\16.0.3\build\HotChocolate.Data.targets" Condition="Exists('$(NuGetPackageRoot)hotchocolate.data\16.0.3\build\HotChocolate.Data.targets')" />
+    <Import Project="$(NuGetPackageRoot)hotchocolate.aspnetcore\16.0.3\build\HotChocolate.AspNetCore.targets" Condition="Exists('$(NuGetPackageRoot)hotchocolate.aspnetcore\16.0.3\build\HotChocolate.AspNetCore.targets')" />
   </ImportGroup>
 </Project>

@@ -1,23 +1,23 @@
 using MongoDB.Driver;
-using products;
+using Furnitures;
 
-namespace productrepo
+namespace Furniturerepo
 {
-    public class ProductRepo
+    public class FurnitureRepo
     {
         private readonly IMongoCollection<Furniture> _furnitureCollection;
 
-        public ProductRepo(IMongoCollection<Furniture> database)
+        public FurnitureRepo(IMongoCollection<Furniture> database)
         {
             _furnitureCollection = database;
         }
 
         
-        public async Task<List<Furniture>> GetAllFurnitureAsync()
+        public async Task< IQueryable<Furniture>> GetAllFurnitureAsync()
         {
             try
             {
-                return await _furnitureCollection.Find(_ => true).ToListAsync();
+                return _furnitureCollection.AsQueryable();
             }
             catch (Exception ex)
             {

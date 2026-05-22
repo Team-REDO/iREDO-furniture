@@ -1,12 +1,13 @@
 using HotChocolate.Execution;
+using HotChocolate.Data.MongoDb;
 using MongoDB.Driver;
-using productrepo;
-using products;
+using Furniturerepo;
+using Furnitures;
 
 
 var builder = WebApplication.CreateBuilder(args);
-
-var mongoConnection = builder.Configuration["database"];
+DotNetEnv.Env.Load();
+var mongoConnection = Environment.GetEnvironmentVariable("database");
 
 builder.Services.AddSingleton<IMongoCollection<Furniture>>(sp =>
 {
@@ -15,7 +16,7 @@ builder.Services.AddSingleton<IMongoCollection<Furniture>>(sp =>
     return database.GetCollection<Furniture>("furniture");
 });
 
-builder.Services.AddSingleton<ProductRepo>();
+builder.Services.AddSingleton<FurnitureRepo>();
 
 
 // Add services to the container.
@@ -25,8 +26,13 @@ builder.Services.AddOpenApi();
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<queries.Query>()
+    .AddPagingArguments()
     .AddFiltering()
-.AddSorting();
+    .AddSorting().AddMongoDbFiltering()
+    .AddMongoDbSorting().ModifyRequestOptions(o =>
+    {
+        o.IncludeExceptionDetails = true;
+    });
 
 var app = builder.Build();
 
@@ -39,15 +45,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapGraphQL("/graphql");
-
-using (var scope = app.Services.CreateScope())
-{
-    var executorResolver = scope.ServiceProvider
-        .GetRequiredService<IRequestExecutorResolver>();
-    var executor = await executorResolver.GetRequestExecutorAsync();
-    var schema = executor.Schema.Print();
-    File.WriteAllText("schema.graphql", schema);
-}
 
 app.Run();
 

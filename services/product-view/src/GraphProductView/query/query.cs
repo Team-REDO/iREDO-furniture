@@ -1,6 +1,6 @@
 
-using productrepo;
-using products;
+using Furniturerepo;
+using Furnitures;
 
 namespace  queries
 {
@@ -9,11 +9,11 @@ namespace  queries
 
     // this method is used to get all the furniture items it's equipped with sorting, filtering and paging capabilities
     //  making it able to sort and filter on all elements like category, price or color
-    [UseSorting]
-    [UseFiltering]
     [UsePaging]
-    public async Task<List<Furniture>> GetAllFurniture(
-        [Service] ProductRepo repo)
+    [UseFiltering]
+    [UseSorting]
+    public async Task< IQueryable<Furniture>> GetAllFurniture(
+        [Service] FurnitureRepo repo)
     {
         var allFurniture = await repo.GetAllFurnitureAsync();
         return allFurniture;
@@ -23,7 +23,7 @@ namespace  queries
     public async Task<Furniture> GetFurnitureById(
         string
          id,
-        [Service] ProductRepo repo)
+        [Service] FurnitureRepo repo)
     {
         return await repo.GetFurnitureByIdAsync(id);
     }
