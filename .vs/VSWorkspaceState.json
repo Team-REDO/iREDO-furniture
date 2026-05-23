@@ -1,6 +1,11 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\services",
+    "\\services\\email-service",
+    "\\services\\email-service\\Models",
+    "\\services\\email-service\\Service"
   ],
+  "SelectedNode": "\\services\\email-service\\Worker.cs",
   "PreviewInSolutionExplorer": false
 }
