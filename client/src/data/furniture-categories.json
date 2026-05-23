@@ -1,0 +1,26 @@
+[
+  {
+    "category": "Chairs",
+    "subcategories": ["Dining Chairs", "Armchairs", "Office Chairs", "Stools"]
+  },
+  {
+    "category": "Beds",
+    "subcategories": ["Bed Frames", "Box Mattress", "Spring Mattress", "Children's Beds", "Baby Beds"]
+  },
+  {
+    "category": "Tables",
+    "subcategories": ["Desks", "Dining Tables", "Coffee Tables", "Side Tables"]
+  },
+  {
+    "category": "Sofas",
+    "subcategories": ["2-Seater Sofas", "3-Seater Sofas", "Corner Sofas", "Sofa Beds"]
+  },
+  {
+    "category": "Storage",
+    "subcategories": ["Wardrobes", "Dressers", "Bookshelves", "Sideboards", "TV Consoles"]
+  },
+  {
+    "category": "Lighting",
+    "subcategories": ["Floor Lamps", "Table Lamps", "Pendant Lamps", "Wall Lamps"]
+  }
+]
