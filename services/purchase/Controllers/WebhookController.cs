@@ -19,9 +19,16 @@ public class WebhookController : ControllerBase
 
         try
         {
+            var signature = Request.Headers["Stripe-Signature"];
+
+            if (string.IsNullOrEmpty(signature))
+            {
+                return BadRequest("Missing Stripe-Signature header");
+            }
+
             var stripeEvent = EventUtility.ConstructEvent(
                 json,
-                Request.Headers["Stripe-Signature"],
+                signature,
                 secret
             );
 
