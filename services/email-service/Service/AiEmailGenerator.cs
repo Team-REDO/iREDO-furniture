@@ -11,7 +11,7 @@ public class AiEmailGenerator
         _http = new HttpClient();
         
         var apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
-        //("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");
+       
 
         Console.WriteLine("ENV KEY: " + Environment.GetEnvironmentVariable("OPENROUTER_API_KEY"));
         if (string.IsNullOrEmpty(apiKey))
@@ -32,7 +32,9 @@ public class AiEmailGenerator
 
         var requestBody = new
         {
-            model = "meta-llama/llama-3-8b-instruct",
+            //model = "meta-llama/llama-3-8b-instruct",
+            model = "openrouter/free",
+
             messages = new[]
             {
                 new { role = "user", content = prompt }
