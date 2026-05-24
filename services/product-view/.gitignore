@@ -8,6 +8,11 @@ out/
 
 # Visual Studio workspace
 .vs/
+bin/
+obj/
+out/
+/.vs
+GraphProductView.*
 *.suo
 *.user
 *.userosscache
