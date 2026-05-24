@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Stripe;
-using System.Text;
+using Stripe.Checkout;
 using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
@@ -17,20 +16,45 @@ public class WebhookController : ControllerBase
 
         var secret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET");
 
+        if (string.IsNullOrEmpty(secret))
+        {
+            Console.WriteLine("Webhook secret is missing");
+            return BadRequest("Webhook secret not configured");
+        }
+
+        var signature = Request.Headers["Stripe-Signature"].FirstOrDefault();
+
+        if (string.IsNullOrEmpty(signature))
+        {
+            Console.WriteLine("Missing Stripe-Signature header");
+            return BadRequest("Missing Stripe-Signature header");
+        }
+
         try
         {
             var stripeEvent = EventUtility.ConstructEvent(
                 json,
-                Request.Headers["Stripe-Signature"],
+                signature,
                 secret
             );
 
             if (stripeEvent.Type == "checkout.session.completed")
             {
-                var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
+                var session = stripeEvent.Data.Object as Session;
 
-                var productId = session.Metadata["productId"];
-                var quantity = int.Parse(session.Metadata["quantity"]);
+                if (session == null)
+                {
+                    Console.WriteLine("Session is null");
+                    return BadRequest();
+                }
+
+                var productId = session.Metadata.ContainsKey("productId")
+                    ? session.Metadata["productId"]
+                    : "unknown";
+
+                var quantity = session.Metadata.ContainsKey("quantity")
+                    ? int.Parse(session.Metadata["quantity"])
+                    : 0;
 
                 Console.WriteLine($"Payment success for {productId}");
 
@@ -42,8 +66,10 @@ public class WebhookController : ControllerBase
                 using var connection = factory.CreateConnection();
                 using var channel = connection.CreateModel();
 
+                var queueName = Environment.GetEnvironmentVariable("QUEUE_NAME") ?? "listing_queue";
+
                 channel.QueueDeclare(
-                    queue: "listing_queue",
+                    queue: queueName,
                     durable: false,
                     exclusive: false,
                     autoDelete: false,
@@ -59,14 +85,26 @@ public class WebhookController : ControllerBase
 
                 var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
 
-                channel.BasicPublish("", "listing_queue", null, body);
+                channel.BasicPublish(
+                    exchange: "",
+                    routingKey: queueName,
+                    basicProperties: null,
+                    body: body
+                );
+
+                Console.WriteLine("Message sent to RabbitMQ");
             }
 
             return Ok();
         }
+        catch (StripeException ex)
+        {
+            Console.WriteLine("Stripe error: " + ex.Message);
+            return BadRequest();
+        }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            Console.WriteLine("General error: " + ex.Message);
             return BadRequest();
         }
     }
