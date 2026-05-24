@@ -6,10 +6,11 @@ import { authorize } from "../middleware/rbac.middleware.js";
 
 const router = Router();
 
-// Public
+// Public - Get all products/furniture
 router.get("/", getProducts);
+router.get("/furniture", getProducts);
 
-// Admin only
+// Admin only - Create product
 router.post("/", authenticateJWT, authorize(["admin"]), createProduct);
 
 export default router;

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { furnitureCategoriesQueryOptions, furnitureItemsQueryOptions, furnitureItemsQueryOptions2 } from "@/features/furniture/queries";
-export type { FurnitureCategory, ListingItem } from "@/features/furniture/types";
+import { furnitureItemsQueryOptions, furnitureItemsQueryOptions2 } from "@/features/furniture/queries";
+export type { ListingItem } from "@/features/furniture/types";
 
 export interface UseFurnitureItemsOptions {
   usePagination?: boolean;
@@ -20,8 +20,4 @@ export function useFurnitureItems(options: UseFurnitureItemsOptions = {}) {
   }
 
   return useQuery(furnitureItemsQueryOptions());
-}
-
-export function useFurnitureCategories() {
-  return useQuery(furnitureCategoriesQueryOptions());
 }

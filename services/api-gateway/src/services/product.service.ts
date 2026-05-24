@@ -1,12 +1,118 @@
 import axios from "axios";
-import { SERVICES } from "../config/services.js";
+import { PRODUCT_VIEW_GRAPHQL_URL } from "../config/services.js";
 
-export const getProducts = async () => {
-  const res = await axios.get(`${SERVICES.product}/products`);
-  return res.data;
+type ProductViewVariables = Record<string, string | number | undefined>;
+
+type ProductViewGraphQLResponse<T> = {
+  data?: T;
+  errors?: Array<{ message: string }>;
 };
 
-export const createProduct = async (body: any) => {
-  const res = await axios.post(`${SERVICES.catalogue}/products`, body);
-  return res.data;
+type ProductViewFurnitureConnection = {
+  allFurniture: ProductViewVariables[];
+};
+
+
+
+type ProductViewFurniture = {
+  title: string;
+  price: number;
+  zip_code: string;
+  categories?: Array<{
+    name?: string;
+    subcats?: Array<{
+      name?: string;
+    }>;
+  }>;
+  color?: {
+    name?: string;
+  };
+  images?: Array<{
+    url: string;
+  }>;
+};
+
+type ClientFurniture = {
+  title: string;
+  price: number;
+  city: string;
+  categories?: Array<{
+    name?: string;
+    subcats?: Array<{
+      name?: string;
+    }>;
+  }>;
+  images: string[];
+};
+
+const ALL_FURNITURE_QUERY = `
+  query GetAllFurniture {
+    allFurniture {
+      title
+      price
+      zip_code
+      categories {
+        name
+        subcats {
+          name
+        }
+      }
+      color {
+        name
+      }
+      images {
+        url
+      }
+    }
+  }
+`;
+
+async function requestProductView<T>(query: string, variables?: ProductViewVariables) {
+  const response = await axios.post<ProductViewGraphQLResponse<T>>(
+    PRODUCT_VIEW_GRAPHQL_URL,
+    {
+      query,
+      variables,
+    },
+    {
+      validateStatus: () => true,
+    },
+  );
+
+  if (response.status >= 400) {
+    const message = response.data?.errors?.[0]?.message ?? `Product View GraphQL request failed with status ${response.status}`;
+    throw new Error(message);
+  }
+
+  if (response.data.errors?.length) {
+    throw new Error(response.data.errors[0]?.message ?? "Product View GraphQL request failed");
+  }
+
+  if (!response.data.data) {
+    throw new Error("Product View GraphQL response was empty");
+  }
+
+  console.log("RESPONSE:", response.data.data);
+  return response.data.data;
+}
+
+function transformFurniture(furniture: ProductViewFurniture[]): ClientFurniture[] {
+  return furniture.map((item) => ({
+    title: item.title,
+    price: item.price,
+    city: item.zip_code,
+    categories: item.categories ?? [],
+    images: item.images?.map((img) => img.url) || [],
+  }));
+}
+
+export const getProducts = async () => {
+  const result = await requestProductView<{ allFurniture: any[] }>(ALL_FURNITURE_QUERY);
+  return {
+    furniture: transformFurniture(result.allFurniture),
+  };
+};
+
+export const createProduct = async (_body: unknown) => {
+  throw new Error("Product creation not yet implemented");
 };
