@@ -1,0 +1,37 @@
+# User-specific files
+*.env
+
+# JavaScript files
+node_modules/
+
+# C# files
+.vs/
+bin/
+obj/
+out/
+/.vs
+# Java files
+
+# Testing files
+
+
+# dev
+.yarn/
+!.yarn/releases
+.vscode/*
+!.vscode/launch.json
+!.vscode/*.code-snippets
+.idea/workspace.xml
+.idea/usage.statistics.xml
+.idea/shelf
+
+# logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+
