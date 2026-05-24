@@ -6,6 +6,8 @@ node_modules/
 routeTree.gen.ts
 
 # C# files
+GraphProductView.*
+*/
 
 # Java files
 
