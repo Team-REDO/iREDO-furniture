@@ -10,7 +10,7 @@ public class StripeService
 
         var key = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
 
-        Console.WriteLine("STRIPE KEY DEBUG: " + (key ?? "NULL"));
+        
         if (string.IsNullOrEmpty(key))
             throw new Exception("STRIPE_SECRET_KEY not set");
 
