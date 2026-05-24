@@ -38,6 +38,10 @@ services/Purchase
         ├── docker-compose.yml
         └── Purchase.csproj
 ```
+```
+stripe listen --forward-to localhost:5258/webhook
+stripe trigger checkout.session.completed
+```
 
 ---
 

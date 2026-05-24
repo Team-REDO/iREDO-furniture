@@ -4,6 +4,7 @@ using Stripe.Checkout;
 using RabbitMQ.Client;
 using System.Text;
 using System.Text.Json;
+using DotNetEnv;
 
 [ApiController]
 [Route("webhook")]
@@ -12,6 +13,7 @@ public class WebhookController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Handle()
     {
+        DotNetEnv.Env.Load();
         var json = await new StreamReader(Request.Body).ReadToEndAsync();
 
         var secret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET");
@@ -32,13 +34,6 @@ public class WebhookController : ControllerBase
 
         try
         {
-            var signature = Request.Headers["Stripe-Signature"];
-
-            if (string.IsNullOrEmpty(signature))
-            {
-                return BadRequest("Missing Stripe-Signature header");
-            }
-
             var stripeEvent = EventUtility.ConstructEvent(
                 json,
                 signature,
