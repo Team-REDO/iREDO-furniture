@@ -11,7 +11,7 @@ public class OrderItem
 
     public decimal Price { get; set; }
 
-    public List<ImageModel> Images { get; set; } = [];
+    required public String[] Images { get; set; }
 
-    public List<CategoryModel> Categories { get; set; } = [];
+    required public String[] Categories { get; set; }
 }
