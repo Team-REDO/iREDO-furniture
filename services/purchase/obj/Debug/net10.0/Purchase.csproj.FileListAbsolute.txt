@@ -1,0 +1,9 @@
+C:\Users\mpfug\source\repos\iREDO-furniture\services\purchase\obj\Debug\net10.0\Purchase.csproj.AssemblyReference.cache
+C:\Users\mpfug\source\repos\iREDO-furniture\services\purchase\obj\Debug\net10.0\rpswa.dswa.cache.json
+C:\Users\mpfug\source\repos\iREDO-furniture\services\purchase\obj\Debug\net10.0\Purchase.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\mpfug\source\repos\iREDO-furniture\services\purchase\obj\Debug\net10.0\Purchase.AssemblyInfoInputs.cache
+C:\Users\mpfug\source\repos\iREDO-furniture\services\purchase\obj\Debug\net10.0\Purchase.AssemblyInfo.cs
+C:\Users\mpfug\source\repos\iREDO-furniture\services\purchase\obj\Debug\net10.0\Purchase.csproj.CoreCompileInputs.cache
+C:\Users\mpfug\source\repos\iREDO-furniture\services\purchase\obj\Debug\net10.0\Purchase.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\mpfug\source\repos\iREDO-furniture\services\purchase\obj\Debug\net10.0\Purchase.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\mpfug\source\repos\iREDO-furniture\services\purchase\obj\Debug\net10.0\Purchase.sourcelink.json
