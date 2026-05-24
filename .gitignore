@@ -5,11 +5,14 @@
 node_modules/
 
 # C# files
-
+.vs/
+bin/
+obj/
+out/
+/.vs
 # Java files
 
 # Testing files
-
 
 # dev
 .yarn/
