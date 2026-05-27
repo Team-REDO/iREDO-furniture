@@ -22,8 +22,8 @@ public class StripeService
         var options = new SessionCreateOptions
         {
             Mode = "payment",
-            SuccessUrl = "http://localhost:3000/success",
-            CancelUrl = "http://localhost:3000/cancel",
+            SuccessUrl = "http://localhost:5258/success",
+            CancelUrl = "http://localhost:5258/cancel",
 
             LineItems = new List<SessionLineItemOptions>
             {
