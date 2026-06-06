@@ -19,6 +19,11 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
+// const CORS_OPTIONS = {
+//   origin: ["http://localhost:3000", "http://localhost:5173"],
+//   credentials: true,
+// };
+
 app.options("/graphql", cors(CORS_OPTIONS));
 
 app.use("/api", routes);

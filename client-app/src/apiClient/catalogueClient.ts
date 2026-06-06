@@ -1,17 +1,18 @@
-
 export type ListingItem = {
   title: string;
   price: number;
   city: string;
-  category: string;
-  subcategory: string;
+  categories?: {
+    name?: string;
+    subcats?: {
+      name?: string;
+    }[];
+  }[];
   images: string[];
 };
 
-
 type FurnitureItemsResult = {
   furniture: ListingItem[];
-  furnitureTotal?: number;
 };
 
 class CatalogueClient {
@@ -22,8 +23,8 @@ class CatalogueClient {
       credentials: "include",
     });
 
-    if (res.status !== 200) {
-      throw new Error("could not fetch furniture");
+    if (!res.ok) {
+      throw new Error(`Could not fetch furniture. Status: ${res.status}`);
     }
 
     const data = (await res.json()) as FurnitureItemsResult;
