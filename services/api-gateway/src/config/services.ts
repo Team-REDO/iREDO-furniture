@@ -9,13 +9,13 @@ const requireEnv = (name: string) => {
 };
 
 export const SERVICES = {
-  product: requireEnv("PRODUCT_SERVICE_URL"),
-  catalogue: requireEnv("CATALOGUE_SERVICE_URL"),
-  user: requireEnv("USER_SERVICE_URL"),
-  purchase: requireEnv("PURCHASE_SERVICE_URL"),
+  product: requireEnv("PRODUCT_VIEW_SERVICE_URL"),
+  // user: requireEnv("USER_SERVICE_URL"),
+  // purchase: requireEnv("PURCHASE_SERVICE_URL"),
 };
 
 export const FRONTEND_ORIGIN = requireEnv("FRONTEND_ORIGIN");
-export const CATALOGUE_GRAPHQL_URL = requireEnv("CATALOGUE_GRAPHQL_URL");
-export const PRODUCT_VIEW_GRAPHQL_URL = requireEnv("PRODUCT_VIEW_GRAPHQL_URL");
+export const PRODUCT_VIEW_SERVICE_URL = requireEnv("PRODUCT_VIEW_SERVICE_URL");
 export const API_GATEWAY_PORT = requireEnv("API_GATEWAY_PORT");
+
+export const buildGraphQLEndpoint = (baseUrl: string) => new URL("/graphql", baseUrl).toString();

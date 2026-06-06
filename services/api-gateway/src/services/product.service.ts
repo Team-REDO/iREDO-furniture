@@ -1,5 +1,5 @@
 import axios from "axios";
-import { PRODUCT_VIEW_GRAPHQL_URL } from "../config/services.js";
+import { buildGraphQLEndpoint, PRODUCT_VIEW_SERVICE_URL } from "../config/services.js";
 
 type ProductViewVariables = Record<string, string | number | undefined>;
 
@@ -8,11 +8,9 @@ type ProductViewGraphQLResponse<T> = {
   errors?: Array<{ message: string }>;
 };
 
-type ProductViewFurnitureConnection = {
-  allFurniture: ProductViewVariables[];
-};
-
-
+// type ProductViewFurnitureConnection = {
+//   allFurniture: ProductViewVariables[];
+// };
 
 type ProductViewFurniture = {
   title: string;
@@ -68,8 +66,10 @@ const ALL_FURNITURE_QUERY = `
 `;
 
 async function requestProductView<T>(query: string, variables?: ProductViewVariables) {
+  const url = buildGraphQLEndpoint(PRODUCT_VIEW_SERVICE_URL);
+  console.log("ProductView request ->", url, { query: query.replace(/\s+/g, " ").trim(), variables });
   const response = await axios.post<ProductViewGraphQLResponse<T>>(
-    PRODUCT_VIEW_GRAPHQL_URL,
+    url,
     {
       query,
       variables,
@@ -78,6 +78,7 @@ async function requestProductView<T>(query: string, variables?: ProductViewVaria
       validateStatus: () => true,
     },
   );
+  console.log("ProductView response ->", response.status);
 
   if (response.status >= 400) {
     const message = response.data?.errors?.[0]?.message ?? `Product View GraphQL request failed with status ${response.status}`;

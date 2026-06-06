@@ -1,5 +1,4 @@
 import { queryOptions } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
 import type { ListingItem } from "@/features/furniture/types";
 
 type FurnitureItemsResult = {
@@ -8,7 +7,11 @@ type FurnitureItemsResult = {
 };
 
 async function fetchFurnitureItems() {
-  const data = await apiClient.get<FurnitureItemsResult>("/api/products/furniture");
+  const base = import.meta.env && (import.meta.env.VITE_API_GATEWAY_URL as string);
+  if (!base) throw new Error("VITE_API_GATEWAY_URL must be set in the environment");
+  const res = await fetch(`${base.replace(/\/$/, "")}/api/products/furniture`, { credentials: "include" });
+  if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+  const data = (await res.json()) as FurnitureItemsResult;
   return data.furniture;
 }
 
@@ -32,9 +35,18 @@ type FurnitureItemsParams = {
   pageSize: number;
 };
 
-
 async function fetchFurnitureItems2(params: FurnitureItemsParams) {
-  return apiClient.get<FurnitureItemsResult2>("/api/products/furniture", params);
+  const base = import.meta.env && (import.meta.env.VITE_API_GATEWAY_URL as string);
+  if (!base) throw new Error("VITE_API_GATEWAY_URL must be set in the environment");
+  const url = new URL(`${base.replace(/\/$/, "")}/api/products/furniture`);
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
+    });
+  }
+  const res = await fetch(url.toString(), { credentials: "include" });
+  if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+  return (await res.json()) as FurnitureItemsResult2;
 }
 
 export function furnitureItemsQueryOptions2(params: FurnitureItemsParams) {

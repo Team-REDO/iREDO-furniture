@@ -14,7 +14,7 @@ To run the gateway container independently (e.g., when the catalogue test server
 docker run -p 3100:3100 \
   -e API_GATEWAY_PORT=3100 \
   -e FRONTEND_ORIGIN=http://localhost:5173 \
-  -e CATALOGUE_GRAPHQL_URL=http://host.docker.internal:4200/graphql \
+  -e CATALOGUE_GRAPHQL_URL=http://host.docker.internal:4200 \
   -e PRODUCT_SERVICE_URL=http://host.docker.internal:4100 \
   -e CATALOGUE_SERVICE_URL=http://host.docker.internal:4200 \
   -e USER_SERVICE_URL=http://host.docker.internal:4300 \

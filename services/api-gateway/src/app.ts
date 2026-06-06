@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
-import axios from "axios";
+import morgan from "morgan";
 import routes from "./routes/index.js";
-import { CATALOGUE_GRAPHQL_URL, FRONTEND_ORIGIN } from "./config/services.js";
+import { FRONTEND_ORIGIN } from "./config/services.js";
 
 const app = express();
 const CORS_OPTIONS = {
@@ -12,6 +12,8 @@ const CORS_OPTIONS = {
 
 app.use(cors(CORS_OPTIONS));
 app.use(express.json());
+// HTTP request logging
+app.use(morgan("combined"));
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
@@ -19,35 +21,13 @@ app.get("/health", (_req, res) => {
 
 app.options("/graphql", cors(CORS_OPTIONS));
 
-app.all("/graphql", async (req, res, next) => {
-  try {
-    const response = await axios.request({
-      method: req.method,
-      url: CATALOGUE_GRAPHQL_URL,
-      params: req.query,
-      data: req.body,
-      headers: {
-        ...req.headers,
-        host: undefined,
-        origin: undefined,
-      },
-      validateStatus: () => true,
-    });
-
-    res.status(response.status);
-
-    Object.entries(response.headers).forEach(([key, value]) => {
-      if (value !== undefined) {
-        res.setHeader(key, value);
-      }
-    });
-
-    res.send(response.data);
-  } catch (error) {
-    next(error);
-  }
-});
-
 app.use("/api", routes);
+
+// Global error handler - log stack and return JSON error
+app.use((err: unknown, _req: any, res: any, _next: any) => {
+  console.error("Unhandled Error:", err instanceof Error ? (err.stack ?? err.message) : err);
+  const message = err instanceof Error ? err.message : "Internal server error";
+  res.status(500).json({ message });
+});
 
 export default app;
