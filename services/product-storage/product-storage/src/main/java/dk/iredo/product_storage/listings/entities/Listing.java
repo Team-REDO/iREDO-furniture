@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,19 +41,48 @@ public class Listing {
 
     @Setter
     @Getter
-    @OneToOne(cascade = CascadeType.ALL)
+    @Nonnull()
+    private Condition condition;
+
+    //TODO correct fetch.type?
+    @Getter
+    @Setter
+    @OneToOne()
     private ListingDetails listingDetails;
 
-    public Listing(@Nonnull UUID GUID, @Nonnull UUID personGUID,
-                   @Nonnull ListingDetails listingDetails) {
+    //TODO correct fetch.type?
+    @Getter
+    @ManyToMany()
+    private final List<Color> colors = new ArrayList<>();
+
+    //TODO correct fetch.type?
+    @Getter
+    @ManyToMany()
+    private final List<SubCategory> subCategories = new ArrayList<>();
+
+    public Listing(@Nonnull UUID GUID, @Nonnull UUID personGUID) {
         this.GUID = GUID;
         this.personGUID = personGUID;
-        listingDetails.setModified_date(new Date(System.currentTimeMillis()));
-        this.listingDetails = listingDetails;
     }
 
     public Listing() {
         //Empty constructor for the ORM
+    }
+
+    public void addSubCategory(SubCategory subCategory) {
+        if (subCategory == null) {
+            throw new NullPointerException("Given subcategory is null...");
+        }else  {
+            this.subCategories.add(subCategory);
+        }
+    }
+
+    public void addColor(Color color) {
+        if (color == null) {
+            throw new NullPointerException("Give color is null...");
+        }else  {
+            this.colors.add(color);
+        }
     }
 
 }

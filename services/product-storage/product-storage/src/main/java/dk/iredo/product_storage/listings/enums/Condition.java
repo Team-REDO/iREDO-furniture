@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public enum Condition { // Todo - wearRating instead??
+public enum Condition {
 
     //TODO - Danish website for end-user? And what about expansion international? (WE KEEP IT ENGLISH)
     //TODO - fill text for enum and change to upper letter
