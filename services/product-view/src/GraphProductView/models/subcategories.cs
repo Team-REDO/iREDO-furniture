@@ -11,5 +11,8 @@ namespace Subcategories
 
         [BsonElement("name")]
         public string? Name { get; set;}
+
+        [BsonElement("categoryId")]
+        public string? CategoryId { get; set; }
     }
 }

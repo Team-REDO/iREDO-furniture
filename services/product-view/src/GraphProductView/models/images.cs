@@ -9,6 +9,9 @@ namespace Images
         [BsonElement("id")]
         public string? Id { get; set; }
 
+        [BsonElement("imageGuid")]
+        public string? ImageGuid { get; set; }
+
         [BsonElement("url")]
         public string? Url { get; set; }
     }
