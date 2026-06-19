@@ -1,32 +1,79 @@
 import express from "express";
 import cors from "cors";
+import type { CorsOptions } from "cors";
+import { createProxyMiddleware } from "http-proxy-middleware";
+// import { SERVICES } from "./config/services.js";
 import morgan from "morgan";
 import routes from "./routes/index.js";
-import { FRONTEND_ORIGIN } from "./config/services.js";
+// import { FRONTEND_ORIGINS } from "./config/services.js";
+import { FRONTEND_ORIGINS, FRONTEND_REDIRECT_PATH, SERVICES } from "./config/services.js";
 
 const app = express();
-const CORS_OPTIONS = {
-  origin: FRONTEND_ORIGIN,
+
+export const CORS_OPTIONS: CorsOptions = {
+  origin: FRONTEND_ORIGINS,
   credentials: true,
 };
 
 app.use(cors(CORS_OPTIONS));
+
+// OAuth callback proxy must be before express.json()
+// app.get(
+//   "/signin-google",
+//   createProxyMiddleware({
+//     target: SERVICES.user,
+//     changeOrigin: false,
+//     pathRewrite: {
+//       "^/signin-google": "/signin-google",
+//     },
+//   }),
+// );
+
+app.get(
+  "/signin-google",
+  createProxyMiddleware({
+    target: SERVICES.user,
+    changeOrigin: false,
+    pathRewrite: {
+      "^/signin-google": "/signin-google",
+    },
+    on: {
+      proxyRes: (proxyRes, req) => {
+        if (proxyRes.statusCode && proxyRes.statusCode >= 300 && proxyRes.statusCode < 400) {
+          const referer = req.headers.referer;
+
+          const frontendOrigin = FRONTEND_ORIGINS.find((origin) => referer?.startsWith(origin)) ?? FRONTEND_ORIGINS[0];
+
+          proxyRes.headers.location = `${frontendOrigin}${FRONTEND_REDIRECT_PATH}`;
+        }
+      },
+    },
+  }),
+);
+
 app.use(express.json());
-// HTTP request logging
 app.use(morgan("combined"));
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-// const CORS_OPTIONS = {
-//   origin: ["http://localhost:3000", "http://localhost:5173"],
-//   credentials: true,
-// };
-
 app.options("/graphql", cors(CORS_OPTIONS));
 
 app.use("/api", routes);
+
+// app.use(cors(CORS_OPTIONS));
+// app.use(express.json());
+// // HTTP request logging
+// app.use(morgan("combined"));
+
+// app.use(
+//   "/signin-google",
+//   createProxyMiddleware({
+//     target: SERVICES.user,
+//     changeOrigin: false,
+//   }),
+// );
 
 // Global error handler - log stack and return JSON error
 app.use((err: unknown, _req: any, res: any, _next: any) => {
