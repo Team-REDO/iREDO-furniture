@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: graph-api
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      MONGO_CONNECTION: mongodb://mongo:27017
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    container_name: mongo-db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

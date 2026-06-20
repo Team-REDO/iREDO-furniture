@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "SynchronizerService": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "MONGO_CONNECTION": "mongodb+srv://Michael:B2qX9FluN2RnCkA5@mongosyncdb.gbsiiv6.mongodb.net/?appName=MongoSyncDB",
+        "RABBITMQ_HOST": "localhost",
+        "QUEUE_NAME": "listing_queue"
+      }
+    }
+  }
+}
