@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using user.Data;
 using user.DTOs;
+using user.Extensions;
 using user.Services;
 using UserService.DomainModels;
 
@@ -15,16 +17,26 @@ namespace user.Controllers
         public UserController(AppDbContext db, JwtService jwtService) : base(db, jwtService) { }
 
         [Authorize]
-        [HttpPost("details")]
-        public IActionResult UpdateDetails(DetailsRequestDto request)
+        [HttpPost("AddDetails")]
+        public IActionResult AddDetails(DetailsRequestDto request)
         {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var personGuid = User.GetPersonGuid();
 
-            if (email == null)
+            if (personGuid is not Guid guid)
+                return Unauthorized();
+
+            var person = _db.Persons
+                .Include(x => x.Role)
+                .FirstOrDefault(x => x.PersonGuid == guid);
+
+            if (person == null)
+                return NotFound("User not found");
+
+            if(person.Role == null)
                 return Unauthorized();
 
             var currentDetails = _db.Person_Details
-                .Where(d => d.Email == email)
+                .Where(d => d.PersonId == person.Id)
                 .OrderByDescending(d => d.ModifiedAt)
                 .FirstOrDefault();
 
@@ -33,12 +45,12 @@ namespace user.Controllers
 
             var details = new PersonDetails
             {
-                PersonId = currentDetails.PersonId,
+                PersonId = person.Id,
                 Firstname = request.Firstname,
                 Middlename = request.Middlename,
                 Lastname = request.Lastname,
                 PhoneNumber = request.PhoneNumber,
-                Email = currentDetails.Email,
+                Email = currentDetails.Email, // ail comes from so you will could change it
                 ModifiedAt = DateTime.UtcNow
             };
 

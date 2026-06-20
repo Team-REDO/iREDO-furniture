@@ -7,6 +7,7 @@ using System.Data;
 using System.Security.Claims;
 using user.Data;
 using user.DTOs;
+using user.Extensions;
 using user.Services;
 using UserService.DomainModels;
 namespace user.Controllers
@@ -87,7 +88,7 @@ namespace user.Controllers
                         .Include(x => x.Person)
                         .ThenInclude(x => x.Role)
                         .Single(x => x.Email == email);
-                    ex.ToString();
+                    Console.WriteLine(ex);
                 }
             }
 
@@ -107,8 +108,8 @@ namespace user.Controllers
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
 
-            //return Redirect("/catalogue");
-            return Ok(new { token });
+            return Redirect("/catalogue");
+            //return Ok(new { token });
         }
 
         
@@ -138,19 +139,31 @@ namespace user.Controllers
         [HttpGet("me")]
         public IActionResult Me()
         {
+            var personGuid = User.GetPersonGuid();
+
+            if (personGuid == null)
+                return Unauthorized();
+
+            var person = _db.Persons
+                .FirstOrDefault(x => x.PersonGuid == personGuid.Value);
+
+            if (person == null)
+                return NotFound("User not found");
+
+            var isRemoved = _db.Person_Removed
+                .Any(x => x.PersonId == person.Id);
+
+            if (isRemoved)
+                return Unauthorized("User has been removed");
+
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
-            var personGuidClaim = User.FindFirst("personGuid")?.Value;
-
-            if (!Guid.TryParse(personGuidClaim, out var personGuid))
-                return Unauthorized();
 
             if (email == null || role == null)
                 return Unauthorized();
 
             var details = _db.Person_Details
-                .Include(x => x.Person)
-                .Where(x => x.Person.PersonGuid == personGuid)
+                .Where(x => x.PersonId == person.Id)
                 .OrderByDescending(x => x.ModifiedAt)
                 .FirstOrDefault();
 
@@ -158,7 +171,7 @@ namespace user.Controllers
             {
                 Email = email,
                 Role = role,
-                PersonGuid = personGuid,
+                PersonGuid = personGuid.Value,
                 Firstname = details?.Firstname,
                 Middlename = details?.Middlename,
                 Lastname = details?.Lastname,
@@ -170,32 +183,31 @@ namespace user.Controllers
         [HttpDelete("delete-user")]
         public IActionResult DeleteUser()
         {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var personGuid = User.GetPersonGuid();
 
-            if (email == null)
+            if (personGuid == null)
                 return Unauthorized();
 
-            var details = _db.Person_Details
-                .Where(d => d.Email == email)
-                .OrderByDescending(d => d.ModifiedAt)
-                .FirstOrDefault();
+            var person = _db.Persons
+                .Include(x => x.Role)
+                .FirstOrDefault(x => x.PersonGuid == personGuid.Value);
 
-            if (details == null)
+            if (person == null)
                 return NotFound("User not found");
 
             var alreadyRemoved = _db.Person_Removed
-                .Any(x => x.PersonId == details.PersonId);
-            
+                .Any(x => x.PersonId == person.Id);
+
             if (alreadyRemoved)
-                return BadRequest("User already removed");
+                return Conflict("User already removed");
+
             var personRemoved = new PersonRemoved
             {
-                PersonId = details.PersonId,
+                PersonId = person.Id,
                 RemovedAt = DateTime.UtcNow
             };
 
             _db.Person_Removed.Add(personRemoved);
-
             _db.SaveChanges();
 
             return Ok(new

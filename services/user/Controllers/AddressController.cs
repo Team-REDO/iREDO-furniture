@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using user.Data;
 using user.DTOs;
+using user.Extensions;
 using user.Services;
 using UserService.DomainModels;
 
@@ -15,24 +17,26 @@ namespace user.Controllers
         public AddressController(AppDbContext db, JwtService jwtService) : base(db, jwtService) { }
 
         [Authorize]
-        [HttpGet("GetAddress")]
+        [HttpGet]
         public IActionResult GetAddress()
         {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var personGuid = User.GetPersonGuid();
 
-            if (email == null)
+            if (personGuid is not Guid guid)
                 return Unauthorized();
 
-            var details = _db.Person_Details
-                .Where(x => x.Email == email)
-                .OrderByDescending(x => x.ModifiedAt)
-                .FirstOrDefault();
+            var person = _db.Persons
+                .Include(x => x.Role)
+                .FirstOrDefault(x => x.PersonGuid == guid);
 
-            if (details == null)
-                return NotFound();
+            if (person == null)
+                return NotFound("User not found");
+            
+            if (person.Role == null)
+                return Unauthorized();
 
             var address = _db.Address
-                .Where(x => x.PersonId == details.PersonId)
+                .Where(x => x.PersonId == person.Id)
                 .OrderByDescending(x => x.ModifiedAt)
                 .FirstOrDefault();
 
@@ -40,25 +44,27 @@ namespace user.Controllers
         }
 
         [Authorize]
-        [HttpPost("add-address")]
+        [HttpPost]
         public IActionResult AddAddress(AddressRequestDto request)
         {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var personGuid = User.GetPersonGuid();
 
-            if (email == null)
+            if (personGuid is not Guid guid)
                 return Unauthorized();
 
-            var details = _db.Person_Details
-                .Where(x => x.Email == email)
-                .OrderByDescending(x => x.ModifiedAt)
-                .FirstOrDefault(); ;
+            var person = _db.Persons
+                .Include(x => x.Role)
+                .FirstOrDefault(x => x.PersonGuid == guid);
 
-            if (details == null)
+            if (person == null)
                 return NotFound("User not found");
+
+            if (person.Role == null)
+                return Unauthorized();
 
             var addressEntity = new Address
             {
-                PersonId = details.PersonId,
+                PersonId = person.Id,
                 Street = request.Street,
                 StreetNumber = request.StreetNumber,
                 FloorDoor = request.FloorDoor,
