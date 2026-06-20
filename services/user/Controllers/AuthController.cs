@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using System.Data;
 using System.Security.Claims;
 using user.Data;
 using user.DTOs;
@@ -12,17 +13,18 @@ namespace user.Controllers
 {
     [ApiController]
     [Route("api/auth")]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseController
     {
-        private readonly AppDbContext _db;
-        private readonly JwtService _jwtService;
+        public AuthController(AppDbContext db, JwtService jwtService): base(db,jwtService) { }
 
-        public AuthController(AppDbContext db, JwtService jwtService)
+        [HttpGet("google-login")]
+        public IActionResult GoogleLogin()
         {
-            _db = db;
-            _jwtService = jwtService;
+            return Challenge(new AuthenticationProperties
+            {
+                RedirectUri = "/api/auth/google-response"
+            }, "Google");
         }
-
 
         [HttpGet("google-response")]
         public async Task<IActionResult> GoogleResponse()
@@ -85,6 +87,7 @@ namespace user.Controllers
                         .Include(x => x.Person)
                         .ThenInclude(x => x.Role)
                         .Single(x => x.Email == email);
+                    ex.ToString();
                 }
             }
 
@@ -104,18 +107,11 @@ namespace user.Controllers
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
 
-            return Redirect("/catalogue");
-            //return Ok(new { token });
+            //return Redirect("/catalogue");
+            return Ok(new { token });
         }
 
-        [HttpGet("google-login")]
-        public IActionResult GoogleLogin()
-        {
-            return Challenge(new AuthenticationProperties
-            {
-                RedirectUri = "/api/auth/google-response"
-            }, "Google");
-        }
+        
 
         [Authorize]
         [HttpPost("logout")]
@@ -133,7 +129,7 @@ namespace user.Controllers
             });
         }
 
-
+        //POST /api/auth/refresh
 
 
 
@@ -171,8 +167,8 @@ namespace user.Controllers
         }
 
         [Authorize]
-        [HttpGet("address")]
-        public IActionResult GetAddress()
+        [HttpDelete("delete-user")]
+        public IActionResult DeleteUser()
         {
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
 
@@ -180,65 +176,34 @@ namespace user.Controllers
                 return Unauthorized();
 
             var details = _db.Person_Details
-                .Where(x => x.Email == email)
-                .OrderByDescending(x => x.ModifiedAt)
+                .Where(d => d.Email == email)
+                .OrderByDescending(d => d.ModifiedAt)
                 .FirstOrDefault();
-
-            if (details == null)
-                return NotFound();
-
-            var address = _db.Address
-                .Where(x => x.PersonId == details.PersonId)
-                .OrderByDescending(x => x.ModifiedAt)
-                .FirstOrDefault();
-
-            return Ok(address);
-        }
-
-        [Authorize]
-        [HttpPost("add-address")]
-        public IActionResult AddAddress(AddressRequestDto request)
-        {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
-
-            if (email == null)
-                return Unauthorized();
-
-            var details = _db.Person_Details
-                .Where(x => x.Email == email)
-                .OrderByDescending(x => x.ModifiedAt)
-                .FirstOrDefault(); ;
 
             if (details == null)
                 return NotFound("User not found");
 
-            var addressEntity = new Address
+            var alreadyRemoved = _db.Person_Removed
+                .Any(x => x.PersonId == details.PersonId);
+            
+            if (alreadyRemoved)
+                return BadRequest("User already removed");
+            var personRemoved = new PersonRemoved
             {
                 PersonId = details.PersonId,
-                Street = request.Street,
-                StreetNumber = request.StreetNumber,
-                FloorDoor = request.FloorDoor,
-                ZipCode = request.ZipCode,
-                City = request.City,
-                Country = request.Country,
-                ModifiedAt = DateTime.UtcNow
+                RemovedAt = DateTime.UtcNow
             };
 
-            _db.Address.Add(addressEntity);
+            _db.Person_Removed.Add(personRemoved);
+
             _db.SaveChanges();
 
-            return Ok(new AddressResponseDto
+            return Ok(new
             {
-                Street = addressEntity.Street,
-                StreetNumber = addressEntity.StreetNumber,
-                FloorDoor = addressEntity.FloorDoor,
-                ZipCode = addressEntity.ZipCode,
-                City = addressEntity.City,
-                Country = addressEntity.Country
+                Message = "User marked as removed",
+                RemovedAt = personRemoved.RemovedAt
             });
         }
-
-
     }
 
 }
