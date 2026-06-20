@@ -1,18 +1,22 @@
-
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
 namespace Colors
 {
     [BsonIgnoreExtraElements]
     public class Color
     {
-        [BsonElement("id")]
-        public string? Id { get; set; }=default;
+        [BsonElement("colorid")]
+        public string? colorId { get; set; }
+
+        [BsonRepresentation(BsonType.String)]
+        [BsonElement("colorGuid")]
+        public string ColorGuid { get; set; }
 
         [BsonElement("name")]
-        public string? Name { get; set; }=default;
+        public string? Name { get; set; }
 
         [BsonElement("href")]
-        public string? Href { get; set; }=default;
+        public string? Href { get; set; }
     }
 }

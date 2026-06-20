@@ -6,16 +6,20 @@ using Furnitures;
 
 
 var builder = WebApplication.CreateBuilder(args);
-DotNetEnv.Env.Load();
-var mongoConnection = Environment.GetEnvironmentVariable("database");
+var mongoConnection = builder.Configuration["MONGO_CONNECTION"];
 
-var test = new SalesPost();
+if (string.IsNullOrEmpty(mongoConnection))
+{
+    throw new Exception("Missing MONGO_CONNECTION environment variable");
+}
 
 builder.Services.AddSingleton<IMongoCollection<SalesPost>>(sp =>
 {
     var client = new MongoClient(mongoConnection);
-    var database = client.GetDatabase("furnituredatabase");
-    return database.GetCollection<SalesPost>("furniture");
+
+    var database = client.GetDatabase("furnitures");
+
+    return database.GetCollection<SalesPost>("SalesPost");
 });
 
 builder.Services.AddSingleton<FurnitureRepo>();
