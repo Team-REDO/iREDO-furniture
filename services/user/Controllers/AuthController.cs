@@ -23,7 +23,7 @@ namespace user.Controllers
             _jwtService = jwtService;
         }
 
-        
+
         [HttpGet("google-response")]
         public async Task<IActionResult> GoogleResponse()
         {
@@ -42,7 +42,7 @@ namespace user.Controllers
                 return BadRequest("Email not returned from Google");
 
             // 🔍 find existing person
-            var details = _db.PersonDetails
+            var details = _db.Person_Details
                 .FirstOrDefault(p => p.Email == email);
 
             if (details == null)
@@ -50,38 +50,50 @@ namespace user.Controllers
                 try
                 {
                     var defaultRole = _db.Roles
-                        .First(r => r.Name == "user");
+                        .First(r => r.Id == 1); //.First(r => r.Name == "User");
 
                     var person = new Person
                     {
-                        Guid = Guid.NewGuid(),
+                        PersonGuid = Guid.NewGuid(),
                         RoleId = defaultRole.Id,
-                        Details = new PersonDetails
+                        Details = new List<PersonDetails>
                         {
-                            Email = email,
-                            Firstname = firstName ?? "",
-                            Lastname = lastName ?? "",
-                            ModifiedDate = DateTime.UtcNow
+                            new PersonDetails
+                            {
+                                Email = email,
+                                Firstname = firstName ?? "",
+                                Lastname = lastName ?? "",
+                                ModifiedAt = DateTime.UtcNow
+                            }
                         }
                     };
 
                     _db.Persons.Add(person);
                     _db.SaveChanges();
 
-                    details = person.Details;
+                    details = person.Details.First();
                 }
                 catch (Exception ex)
                 {
                     // fallback in case of race condition / duplicate
-                    details = _db.PersonDetails
+                    details = _db.Person_Details
                         .SingleOrDefault(p => p.Email == email);
                 }
             }
 
             // 🎟️ issue JWT
             var token = _jwtService.GenerateJwt(details.Email);
+            //var token = _jwtService.GenerateJwt(details.Email);
+            Response.Cookies.Append("token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = false, // true when using HTTPS
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddHours(1)
+            });
 
-            return Ok(new { token });
+            return Redirect("/catalogue");
+            //return Ok(new { token });
         }
 
         [HttpGet("google-login")]
@@ -109,14 +121,14 @@ namespace user.Controllers
             if (email == null)
                 return Unauthorized();
 
-            var details = _db.PersonDetails
+            var details = _db.Person_Details
                 .FirstOrDefault(p => p.Email == email);
 
             if (details == null)
                 return NotFound("User not found");
 
             // Find existing address
-            var addressEntity = _db.Addresses
+            var addressEntity = _db.Address
                 .FirstOrDefault(a => a.PersonId == details.PersonId);
 
             // Create if missing
@@ -125,9 +137,10 @@ namespace user.Controllers
                 addressEntity = new Address
                 {
                     PersonId = details.PersonId
+
                 };
 
-                _db.Addresses.Add(addressEntity);
+                _db.Address.Add(addressEntity);
             }
 
             // Update values
@@ -137,7 +150,7 @@ namespace user.Controllers
             addressEntity.ZipCode = request.ZipCode;
             addressEntity.City = request.City;
             addressEntity.Country = request.Country;
-            addressEntity.ModifiedDate = DateTime.UtcNow;
+            addressEntity.ModifiedAt = DateTime.UtcNow;
 
             _db.SaveChanges();
 

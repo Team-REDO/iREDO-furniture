@@ -1,4 +1,4 @@
-﻿# iREDO User Service
+# iREDO User Service
 # User Microservice
 
 The User Microservice handles authentication, authorization, user profile management, addresses, roles, and saved lists for the REDO Furniture platform.
@@ -591,6 +591,7 @@ Authorization: Bearer YOUR_TOKEN
 - Rate limiting
 - Better logging and monitoring
 - Soft delete implementation
+- 
 
 Because no backend is ever “finished.” It merely reaches new evolutionary stages of complexity.
 
@@ -611,7 +612,7 @@ dotnet list package
 // =========================
 // Rebuild docker
 // =========================
-````
+````dd
 
 docker-compose down
 dotnet clean
