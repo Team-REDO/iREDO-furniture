@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using user.Data;
 
@@ -11,9 +12,11 @@ using user.Data;
 namespace user.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260619230052_RefactorUserDatabaseStructure")]
+    partial class RefactorUserDatabaseStructure
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,7 +66,7 @@ namespace user.Migrations
 
                     b.HasIndex("PersonId");
 
-                    b.ToTable("Address");
+                    b.ToTable("Addresses");
                 });
 
             modelBuilder.Entity("UserService.DomainModels.Person", b =>
@@ -127,7 +130,7 @@ namespace user.Migrations
 
                     b.HasIndex("PersonId");
 
-                    b.ToTable("Person_Details");
+                    b.ToTable("PersonDetails");
                 });
 
             modelBuilder.Entity("UserService.DomainModels.PersonRemoved", b =>
@@ -148,25 +151,7 @@ namespace user.Migrations
 
                     b.HasIndex("PersonId");
 
-                    b.ToTable("Person_Removed");
-                });
-
-            modelBuilder.Entity("UserService.DomainModels.ProcessedEvent", b =>
-                {
-                    b.Property<Guid>("EventId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ProcessedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("EventId");
-
-                    b.ToTable("Processed_Events");
+                    b.ToTable("PersonRemoved");
                 });
 
             modelBuilder.Entity("UserService.DomainModels.Role", b =>
@@ -220,7 +205,7 @@ namespace user.Migrations
 
                     b.HasIndex("PersonId");
 
-                    b.ToTable("Saved_Lists");
+                    b.ToTable("SavedLists");
                 });
 
             modelBuilder.Entity("UserService.DomainModels.SavedListPost", b =>
@@ -233,7 +218,7 @@ namespace user.Migrations
 
                     b.HasKey("SavedListId", "SalesPostGuid");
 
-                    b.ToTable("Saved_List_Posts");
+                    b.ToTable("SavedListPosts");
                 });
 
             modelBuilder.Entity("UserService.DomainModels.Address", b =>

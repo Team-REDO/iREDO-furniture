@@ -1,4 +1,4 @@
-﻿# iREDO User Service
+# iREDO User Service
 
 # User Microservice
 
@@ -605,6 +605,7 @@ Authorization: Bearer YOUR_TOKEN
 - Rate limiting
 - Better logging and monitoring
 - Soft delete implementation
+- 
 
 Because no backend is ever “finished.” It merely reaches new evolutionary stages of complexity.
 

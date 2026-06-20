@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using user.DomainModels;
 using UserService.DomainModels;
 
 namespace user.Data
@@ -11,91 +10,104 @@ namespace user.Data
 
         
         public DbSet<Person> Persons { get; set; }
-        public DbSet<PersonDetails> PersonDetails { get; set; }
-        public DbSet<Address> Addresses { get; set; }
-        public DbSet<PersonRemoved> PersonRemoved { get; set; }
+        public DbSet<PersonDetails> Person_Details { get; set; }
+        public DbSet<Address> Address { get; set; }
+        public DbSet<PersonRemoved> Person_Removed { get; set; }
+        public DbSet<SavedList> Saved_Lists { get; set; }
+        public DbSet<SavedListPost> Saved_List_Posts { get; set; }
+        public DbSet<ProcessedEvent> Processed_Events { get; set; }
+        //ProcessedEvent
         public DbSet<Role> Roles { get; set; }
-        public DbSet<SavedList> SavedLists { get; set; }
-        public DbSet<SavedListPost> SavedListPosts { get; set; }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
+{
             base.OnModelCreating(modelBuilder);
 
             // =========================
-            // Person ↔ PersonDetails (1:1)
+            // Person ↔ PersonDetails (1:N)
             // =========================
-            modelBuilder.Entity<Person>()
-                .HasOne(person => person.Details)
-                .WithOne(details => details.Person)
-                .HasForeignKey<PersonDetails>(details => details.PersonId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Unique email
             modelBuilder.Entity<PersonDetails>()
-                .HasIndex(details => details.Email)
-                .IsUnique();
-
-            // =========================
-            // Person ↔ Address (1:1)
-            // =========================
-            modelBuilder.Entity<Person>()
-                .HasOne(person => person.Address)
-                .WithOne(address => address.Person)
-                .HasForeignKey<Address>(address => address.PersonId)
+                .HasOne(d => d.Person)
+                .WithMany(p => p.Details)
+                .HasForeignKey(d => d.PersonId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // =========================
-            // Role ↔ Person (1:N)
+            // Person ↔ Address (1:N)
             // =========================
-            modelBuilder.Entity<Person>()
-                .HasOne(person => person.Role)
-                .WithMany(role => role.Persons)
-                .HasForeignKey(person => person.RoleId)
-                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<Address>()
+                .HasOne(a => a.Person)
+                .WithMany(p => p.Addresses)
+                .HasForeignKey(a => a.PersonId);
 
             // =========================
             // Person ↔ SavedList (1:N)
             // =========================
             modelBuilder.Entity<SavedList>()
-                .HasOne(savedList => savedList.Person)
-                .WithMany(person => person.SavedLists)
-                .HasForeignKey(savedList => savedList.PersonId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasOne(sl => sl.Person)
+                .WithMany(p => p.SavedLists)
+                .HasForeignKey(sl => sl.PersonId);
 
             // =========================
             // SavedList ↔ SavedListPost (1:N)
             // =========================
             modelBuilder.Entity<SavedListPost>()
-                .HasOne(savedListPost => savedListPost.SavedList)
-                .WithMany(savedList => savedList.Posts)
-                .HasForeignKey(savedListPost => savedListPost.SavedListId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .HasKey(x => new
+                {
+                    x.SavedListId,
+                    x.SalesPostGuid
+                });
+
+            modelBuilder.Entity<SavedListPost>()
+                .HasOne(x => x.SavedList)
+                .WithMany(x => x.Posts)
+                .HasForeignKey(x => x.SavedListId);
 
             // =========================
             // Person ↔ PersonRemoved (1:N)
             // =========================
             modelBuilder.Entity<PersonRemoved>()
-                .HasOne(personRemoved => personRemoved.Person)
-                .WithMany(person => person.RemovedRecords)
-                .HasForeignKey(personRemoved => personRemoved.PersonId)
-                .OnDelete(DeleteBehavior.Cascade);
+               .HasOne(pr => pr.Person)
+               .WithMany(p => p.RemovedRecords)
+               .HasForeignKey(pr => pr.PersonId);
 
             // =========================
-            // Seed Roles
+            // Person ↔ PersonRemoved (1:N)
+            // =========================
+            modelBuilder.Entity<Person>()
+               .HasOne(p => p.Role)
+               .WithMany(r => r.Persons)
+               .HasForeignKey(p => p.RoleId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            // =========================
+            // ProcessedEvent
+            // =========================
+            modelBuilder.Entity<ProcessedEvent>()
+                .HasKey(x => x.EventId);
+
+            // =========================
+            // Alternate Key
+            // =========================
+            modelBuilder.Entity<Person>()
+                .HasIndex(x => x.PersonGuid)
+                .IsUnique();
+            
+            // =========================
+            // Seeding default roles
             // =========================
             modelBuilder.Entity<Role>().HasData(
                 new Role
                 {
                     Id = 1,
-                    Name = "user"
+                    Name = "User"
                 },
                 new Role
                 {
                     Id = 2,
-                    Name = "admin"
+                    Name = "Admin"
                 }
             );
+
         }
     }
 }
