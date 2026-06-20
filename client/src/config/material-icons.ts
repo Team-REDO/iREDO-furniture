@@ -33,5 +33,5 @@ export const MATERIAL_ICONS = {
   } as Record<string, string>,
 
   // Fallback cycle for categories not listed above.
-  fallbackCycle: ["chair Alt", "bed", "table_restaurant", "weekend", "inventory_2", "light"],
+  fallbackCycle: ["chair", "bed", "table_restaurant", "weekend", "inventory_2", "light"],
 } as const;

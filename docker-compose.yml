@@ -1,0 +1,84 @@
+services:
+  api-gateway:
+    container_name: iredo-api-gateway
+    build:
+      context: ./services/api-gateway
+    env_file:
+      - ./services/api-gateway/.env
+    ports:
+      - "${API_GATEWAY_PORT}:3100"
+    depends_on:
+      product-view:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3100/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  mongodb:
+    container_name: iredo-mongodb
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: furnituredatabase
+    volumes:
+      - mongodb-data:/data/db
+      - ./infrastructure/databases/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js:ro
+    restart: unless-stopped
+
+  product-view:
+    container_name: iredo-product-view
+    build:
+      context: ./services/product-view/src/GraphProductView
+    env_file:
+      - ./services/product-view/.env
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+    ports:
+      - "${PRODUCT_VIEW_PORT}:8080"
+    depends_on:
+      mongodb:
+        condition: service_started
+    restart: unless-stopped
+
+  client:
+    container_name: iredo-client
+    build:
+      context: ./client
+    ports:
+      - "${CLIENT_PORT}:5173"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    env_file:
+      - ./services/user/.env
+    container_name: ${CONTAINER_NAME}
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${USER_DB_PASSWORD}
+    ports:
+      - "${USER_DB_PORT}:1433"
+
+  user-service:
+    build:
+      context: ./services/user
+    container_name: REDO_Service_User
+    env_file:
+      - ./services/user/.env
+    ports:
+      - "${USER_API_PORT}:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mssql,1433;Database=${USER_DB_NAME};User=${USER_DB_USER};Password=${USER_DB_PASSWORD};TrustServerCertificate=True
+    depends_on:
+      - mssql
+
+volumes:
+  mongodb-data:

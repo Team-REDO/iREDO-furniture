@@ -5,14 +5,14 @@ import { Separator } from "@/components/ui/separator";
 import { ListingCard } from "@/components/listing-card";
 import { MATERIAL_ICONS } from "@/config/material-icons";
 import { cn } from "@/lib/utils";
-import { furnitureCategoriesQueryOptions, furnitureItemsQueryOptions } from "@/features/furniture/queries";
-import { useFurnitureItems, useFurnitureCategories } from "@/hooks/use-furniture";
+import { furnitureItemsQueryOptions } from "@/features/furniture/queries";
+import { useFurnitureItems } from "@/hooks/use-furniture";
 
 type SortOption = "price-asc" | "price-desc" | "city-asc" | "city-desc";
 
 export const Route = createFileRoute("/_public/catalogue")({
   loader: async ({ context }) => {
-    await Promise.all([context.queryClient.ensureQueryData(furnitureCategoriesQueryOptions()), context.queryClient.ensureQueryData(furnitureItemsQueryOptions())]);
+    await context.queryClient.ensureQueryData(furnitureItemsQueryOptions());
   },
   component: RouteComponent,
 });
@@ -22,9 +22,27 @@ function RouteComponent() {
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("price-asc");
 
-  // Fetch data using custom hooks
-  const { data: furnitureCategories = [] } = useFurnitureCategories();
   const { data: furnitureItems = [] } = useFurnitureItems();
+
+  const furnitureCategories = useMemo(() => {
+    const categoryMap = new Map<string, Set<string>>();
+
+    for (const item of furnitureItems) {
+      const categoryName = item.category || "Uncategorized";
+      const subcategoryName = item.subcategory || "Uncategorized";
+
+      if (!categoryMap.has(categoryName)) {
+        categoryMap.set(categoryName, new Set());
+      }
+
+      categoryMap.get(categoryName)?.add(subcategoryName);
+    }
+
+    return Array.from(categoryMap.entries()).map(([category, subcategories]) => ({
+      category,
+      subcategories: Array.from(subcategories),
+    }));
+  }, [furnitureItems]);
  
   // With pagination:
   // const { data: furnitureItems = [] } = useFurnitureItems({

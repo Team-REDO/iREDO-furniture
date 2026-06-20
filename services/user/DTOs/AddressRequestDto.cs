@@ -1,0 +1,13 @@
+﻿namespace user.DTOs
+{
+    public class AddressRequestDto
+    {
+
+        public string? Street { get; set; }
+        public string StreetNumber { get; set; } = "";
+        public string FloorDoor { get; set; } = "";
+        public string ZipCode { get; set; } = "";
+        public string City { get; set; } = "";
+        public string Country { get; set; } = "";
+    }
+}

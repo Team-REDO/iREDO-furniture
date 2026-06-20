@@ -1,47 +1,18 @@
 import { queryOptions } from "@tanstack/react-query";
-import { gql } from "graphql-request";
-import { graphqlClient } from "@/lib/graphql-client";
-import type { FurnitureCategory, ListingItem } from "@/features/furniture/types";
-
-const FURNITURE_ITEMS_QUERY = gql`
-  query FurnitureItems {
-    furniture {
-      title
-      price
-      city
-      subcategory
-      images
-    }
-  }
-`;
-
-const FURNITURE_CATEGORIES_QUERY = gql`
-  query FurnitureCategories {
-    categories {
-      category
-      subcategories
-    }
-  }
-`;
-
-
+import type { ListingItem } from "@/features/furniture/types";
 
 type FurnitureItemsResult = {
   furniture: ListingItem[];
-};
-
-type FurnitureCategoriesResult = {
-  categories: FurnitureCategory[];
+  furnitureTotal?: number;
 };
 
 async function fetchFurnitureItems() {
-  const data = await graphqlClient.request<FurnitureItemsResult>(FURNITURE_ITEMS_QUERY);
+  const base = import.meta.env && (import.meta.env.VITE_API_GATEWAY_URL as string);
+  if (!base) throw new Error("VITE_API_GATEWAY_URL must be set in the environment");
+  const res = await fetch(`${base.replace(/\/$/, "")}/api/products/furniture`, { credentials: "include" });
+  if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+  const data = (await res.json()) as FurnitureItemsResult;
   return data.furniture;
-}
-
-async function fetchFurnitureCategories() {
-  const data = await graphqlClient.request<FurnitureCategoriesResult>(FURNITURE_CATEGORIES_QUERY);
-  return data.categories;
 }
 
 export function furnitureItemsQueryOptions() {
@@ -51,27 +22,7 @@ export function furnitureItemsQueryOptions() {
   });
 }
 
-export function furnitureCategoriesQueryOptions() {
-  return queryOptions({
-    queryKey: ["categories"],
-    queryFn: fetchFurnitureCategories,
-  });
-}
-
 // ___________________________
-
-const PAGINATED_FURNITURE_QUERY = gql`
-  query FurnitureItems($city: String, $page: Int, $pageSize: Int) {
-    furniture(city: $city, page: $page, pageSize: $pageSize) {
-      title
-      price
-      city
-      subcategory
-      images
-    }
-    furnitureTotal(city: $city)
-  }
-`;
 
 type FurnitureItemsResult2 = {
   furniture: ListingItem[];
@@ -84,9 +35,18 @@ type FurnitureItemsParams = {
   pageSize: number;
 };
 
-
 async function fetchFurnitureItems2(params: FurnitureItemsParams) {
-  return graphqlClient.request<FurnitureItemsResult2>(PAGINATED_FURNITURE_QUERY, params);
+  const base = import.meta.env && (import.meta.env.VITE_API_GATEWAY_URL as string);
+  if (!base) throw new Error("VITE_API_GATEWAY_URL must be set in the environment");
+  const url = new URL(`${base.replace(/\/$/, "")}/api/products/furniture`);
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
+    });
+  }
+  const res = await fetch(url.toString(), { credentials: "include" });
+  if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+  return (await res.json()) as FurnitureItemsResult2;
 }
 
 export function furnitureItemsQueryOptions2(params: FurnitureItemsParams) {
