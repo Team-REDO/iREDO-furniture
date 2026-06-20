@@ -1,12 +1,16 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.Collections.Generic;
 
 public class SalesPost
 {
     [BsonId]
     public ObjectId Id { get; set; }
 
+    [BsonElement("sales_post_guid")]
     public string SalesPostGuid { get; set; } = System.Guid.NewGuid().ToString();
+
+    [BsonElement("guid")]
     public string Guid { get; set; } = string.Empty;
     public string PersonId { get; set; } = string.Empty;
 
