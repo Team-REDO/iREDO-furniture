@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using System.Security.Claims;
 using user.Data;
 using user.DTOs;
@@ -43,7 +43,9 @@ namespace user.Controllers
 
             // 🔍 find existing person
             var details = _db.Person_Details
-                .FirstOrDefault(p => p.Email == email);
+                .Include(x => x.Person)
+                .ThenInclude(x => x.Role)
+                .FirstOrDefault(x => x.Email == email);
 
             if (details == null)
             {
@@ -71,19 +73,29 @@ namespace user.Controllers
                     _db.Persons.Add(person);
                     _db.SaveChanges();
 
-                    details = person.Details.First();
+                    details = _db.Person_Details
+                        .Include(x => x.Person)
+                        .ThenInclude(x => x.Role)
+                        .Single(x => x.Email == email);
                 }
                 catch (Exception ex)
                 {
                     // fallback in case of race condition / duplicate
                     details = _db.Person_Details
-                        .SingleOrDefault(p => p.Email == email);
+                        .Include(x => x.Person)
+                        .ThenInclude(x => x.Role)
+                        .Single(x => x.Email == email);
                 }
             }
 
-            // 🎟️ issue JWT
-            var token = _jwtService.GenerateJwt(details.Email);
-
+            var userPerson = details.Person;
+            //  issue JWT
+            var token = _jwtService.GenerateJwt(
+                details.Email,
+                userPerson.Role.Name,
+                userPerson.PersonGuid
+            );
+            //var token = _jwtService.GenerateJwt(details.Email);
             Response.Cookies.Append("token", token, new CookieOptions
             {
                 HttpOnly = true,
@@ -93,6 +105,7 @@ namespace user.Controllers
             });
 
             return Redirect("/catalogue");
+            //return Ok(new { token });
         }
 
         [HttpGet("google-login")]
@@ -103,12 +116,83 @@ namespace user.Controllers
                 RedirectUri = "/api/auth/google-response"
             }, "Google");
         }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            // Remove JWT
+            Response.Cookies.Delete("token");
+
+            // Remove Google/Cookie auth session
+            await HttpContext.SignOutAsync("Cookies");
+
+            return Ok(new
+            {
+                message = "Logged out"
+            });
+        }
+
+
+
+
+
+        // ---------------------------------------------------------------------------------------
         [Authorize]
         [HttpGet("me")]
         public IActionResult Me()
         {
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
-            return Ok(new { email });
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            var personGuidClaim = User.FindFirst("personGuid")?.Value;
+
+            if (!Guid.TryParse(personGuidClaim, out var personGuid))
+                return Unauthorized();
+
+            if (email == null || role == null)
+                return Unauthorized();
+
+            var details = _db.Person_Details
+                .Include(x => x.Person)
+                .Where(x => x.Person.PersonGuid == personGuid)
+                .OrderByDescending(x => x.ModifiedAt)
+                .FirstOrDefault();
+
+            return Ok(new MeResponseDto
+            {
+                Email = email,
+                Role = role,
+                PersonGuid = personGuid,
+                Firstname = details?.Firstname,
+                Middlename = details?.Middlename,
+                Lastname = details?.Lastname,
+                PhoneNumber = details?.PhoneNumber
+            });
+        }
+
+        [Authorize]
+        [HttpGet("address")]
+        public IActionResult GetAddress()
+        {
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+
+            if (email == null)
+                return Unauthorized();
+
+            var details = _db.Person_Details
+                .Where(x => x.Email == email)
+                .OrderByDescending(x => x.ModifiedAt)
+                .FirstOrDefault();
+
+            if (details == null)
+                return NotFound();
+
+            var address = _db.Address
+                .Where(x => x.PersonId == details.PersonId)
+                .OrderByDescending(x => x.ModifiedAt)
+                .FirstOrDefault();
+
+            return Ok(address);
         }
 
         [Authorize]
@@ -121,39 +205,29 @@ namespace user.Controllers
                 return Unauthorized();
 
             var details = _db.Person_Details
-                .FirstOrDefault(p => p.Email == email);
+                .Where(x => x.Email == email)
+                .OrderByDescending(x => x.ModifiedAt)
+                .FirstOrDefault(); ;
 
             if (details == null)
                 return NotFound("User not found");
 
-            // Find existing address
-            var addressEntity = _db.Address
-                .FirstOrDefault(a => a.PersonId == details.PersonId);
-
-            // Create if missing
-            if (addressEntity == null)
+            var addressEntity = new Address
             {
-                addressEntity = new Address
-                {
-                    PersonId = details.PersonId
+                PersonId = details.PersonId,
+                Street = request.Street,
+                StreetNumber = request.StreetNumber,
+                FloorDoor = request.FloorDoor,
+                ZipCode = request.ZipCode,
+                City = request.City,
+                Country = request.Country,
+                ModifiedAt = DateTime.UtcNow
+            };
 
-                };
-
-                _db.Address.Add(addressEntity);
-            }
-
-            // Update values
-            addressEntity.Street = request.Street;
-            addressEntity.StreetNumber = request.StreetNumber;
-            addressEntity.FloorDoor = request.FloorDoor;
-            addressEntity.ZipCode = request.ZipCode;
-            addressEntity.City = request.City;
-            addressEntity.Country = request.Country;
-            addressEntity.ModifiedAt = DateTime.UtcNow;
-
+            _db.Address.Add(addressEntity);
             _db.SaveChanges();
 
-            var response = new AddressResponseDto
+            return Ok(new AddressResponseDto
             {
                 Street = addressEntity.Street,
                 StreetNumber = addressEntity.StreetNumber,
@@ -161,10 +235,10 @@ namespace user.Controllers
                 ZipCode = addressEntity.ZipCode,
                 City = addressEntity.City,
                 Country = addressEntity.Country
-            };
-
-            return Ok(response);
+            });
         }
+
+
     }
 
 }

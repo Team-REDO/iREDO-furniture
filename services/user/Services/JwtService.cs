@@ -15,11 +15,16 @@ namespace user.Services
                 ?? throw new Exception("JWT key missing");
         }
 
-        public string GenerateJwt(string email)
+        public string GenerateJwt(
+            string email,
+            string role,
+            Guid personGuid)
         {
             var claims = new[]
             {
-                new Claim(ClaimTypes.Email, email)
+                new Claim(ClaimTypes.Email, email),
+            new Claim(ClaimTypes.Role, role),
+            new Claim("personGuid", personGuid.ToString())
             };
 
             var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_jwtKey));
