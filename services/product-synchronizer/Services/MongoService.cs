@@ -1,6 +1,6 @@
 ﻿using MongoDB.Driver;
 
-public class MongoService
+public class MongoService : IMongoService
 {
     private readonly IMongoCollection<SalesPost> _collection;
 

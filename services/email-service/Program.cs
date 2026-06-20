@@ -1,10 +1,36 @@
-using EmailService;
+using EmailService.Data;
+using EmailService.Service;
+using EmailService.Services;
+using Microsoft.EntityFrameworkCore;
+using EmailService.Data;
 
 var builder = Host.CreateApplicationBuilder(args);
+
+//Services
+builder.Services.AddScoped<IEmailSender, EmailSender>();
+builder.Services.AddScoped<IAiEmailGenerator, AiEmailGenerator>();
+
+
+//DbContext
+builder.Services.AddDbContext<EmailDbContext>();
+builder.Services.AddDbContext<EmailDbContext>(options =>
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        new MySqlServerVersion(new Version(8, 0, 0))
+    ));
+
+//Worker
 builder.Services.AddHostedService<Worker>();
 
 var host = builder.Build();
-host.Run();
+using (var scope = host.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<EmailDbContext>();
+
+    db.Database.EnsureCreated(); // creates DB if not exists
+    Seeder.Seed(db);
+}
+host.Run(); ;
 
 
 // To run RabbitMQ locally, use the following command:
@@ -18,8 +44,13 @@ host.Run();
 /*
 This is the current expected format.
 {
-"To": "yourreal@email.com",
-  "Subject": "RabbitMQ Email Test",
-  "Body": "If you received this email, the C# RabbitMQ microservice works."
+  "eventId": "123",
+  "eventType": "EmailRequested",
+  "createdAt": "2026-06-18T12:00:00Z",
+  "payload": {
+    "to": "test@test.com",
+    "subject": "Hello",
+    "body": "Hi"
+  }
 }
 */

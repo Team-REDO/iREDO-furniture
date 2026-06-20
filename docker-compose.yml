@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3307:3306"
+
+  emailservice:
+    build: ./services/email-service
+    container_name: emailservice
+    depends_on:
+      - rabbitmq
+      - mysql
+    environment:
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - MAILJET_API_KEY=${MAILJET_API_KEY}
+      - MAILJET_SECRET=${MAILJET_SECRET}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - MYSQL_CONNECTION=${MYSQL_CONNECTION}
+
+  synchronizerservice:
+    build: ./services/product-synchronizer
+    container_name: synchronizerservice
+    depends_on:
+      - rabbitmq
+      - mysql
+    environment:
+      - MONGO_CONNECTION=${MONGO_CONNECTION}
+      - MYSQL_CONNECTION=${MYSQL_CONNECTION}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - QUEUE_NAME=${QUEUE_NAME}
+
+  purchaseservice:
+    build: ./services/purchase
+    container_name: purchaseservice
+    depends_on:
+      - rabbitmq
+    environment:
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - QUEUE_NAME=${QUEUE_NAME}
+      - MONGO_CONNECTION=${MONGO_CONNECTION}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}

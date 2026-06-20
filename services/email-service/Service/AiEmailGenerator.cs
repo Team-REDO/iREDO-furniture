@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 
-public class AiEmailGenerator
+public class AiEmailGenerator : IAiEmailGenerator
 {
     private readonly HttpClient _http;
 
@@ -11,7 +11,6 @@ public class AiEmailGenerator
         _http = new HttpClient();
         
         var apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
-        //("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");
 
         Console.WriteLine("ENV KEY: " + Environment.GetEnvironmentVariable("OPENROUTER_API_KEY"));
         if (string.IsNullOrEmpty(apiKey))
@@ -26,9 +25,25 @@ public class AiEmailGenerator
         _http.DefaultRequestHeaders.Add("X-Title", "EmailService");
     }
 
-    public async Task<string> GenerateEmail(string subject, string context)
+    public async Task<string> GenerateEmail(string subject, string context)  // <-- This is the prompt we send to the AI model that determines how it behaves
     {
-        var prompt = $"Write a short, friendly customer email.\nSubject: {subject}\nDetails: {context}";
+        var prompt = $@" 
+        You are a customer support assistant for an e-commerce company.
+
+        Write a short confirmation email after a purchase.
+
+        Include:
+        - A friendly greeting
+        - Confirmation of purchase
+        - Mention the product briefly
+        - A closing sentence
+        - include a list of all items purchased with their names and prices
+        - include a total price at the end of the list
+
+        Tone: Friendly, human, slightly enthusiastic
+
+        Subject: {subject}
+        Details: {context}";
 
         var requestBody = new
         {

@@ -1,9 +1,10 @@
-﻿using MailKit.Net.Smtp;
+﻿using EmailService.Service;
+using MailKit.Net.Smtp;
 using MimeKit;
 
 namespace EmailService.Services;
 
-public class EmailSender
+public class EmailSender : IEmailSender
 {
     public void Send(string to, string subject, string body)
     {

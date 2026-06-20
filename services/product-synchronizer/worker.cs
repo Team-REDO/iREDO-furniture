@@ -1,5 +1,4 @@
-﻿
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
@@ -9,11 +8,41 @@ using System.Collections.Generic;
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
-    private readonly MongoService _mongo;
+    private readonly IMongoService _mongo;
     private IConnection _connection;
     private IModel _channel;
 
-public Worker(ILogger<Worker> logger, MongoService mongo)
+    public Worker(ILogger<Worker> logger, IMongoService mongo, bool skipRabbit)
+    {
+        _logger = logger;
+        _mongo = mongo;
+
+        if (skipRabbit)
+        {
+            return; // ✅ unchanged
+        }
+
+        var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "rabbitmq";
+        var queueName = Environment.GetEnvironmentVariable("QUEUE_NAME") ?? "listing_queue";
+
+        var factory = new ConnectionFactory()
+        {
+            HostName = host
+        };
+
+        _connection = factory.CreateConnection();
+        _channel = _connection.CreateModel();
+
+        _channel.QueueDeclare(
+            queue: queueName,
+            durable: false,
+            exclusive: false,
+            autoDelete: false,
+            arguments: null
+        );
+    }
+
+    public Worker(ILogger<Worker> logger, IMongoService mongo)
     {
         _logger = logger;
         _mongo = mongo;
@@ -74,9 +103,36 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
 
                 var json = Encoding.UTF8.GetString(ea.Body.ToArray());
 
-                var input = JsonSerializer.Deserialize<IncomingListing>(
+                // ✅ FIX 1: Correct envelope deserialization
+                var envelope = JsonSerializer.Deserialize<EventEnvelope<IncomingListing>>(
                     json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (envelope == null)
+                {
+                    _logger.LogWarning("Invalid envelope");
+                    _channel.BasicNack(ea.DeliveryTag, false, false);
+                    return;
+                }
+
+                var input = envelope.Payload;
+
+                // ✅ FIX 2: Idempotency check (NEW)
+                using (var db = new SynchronizerDbContext())
+                {
+                    var exists = db.ProcessedEvents
+                        .Any(e => e.EventId == envelope.EventId);
+
+                    if (exists)
+                    {
+                        _logger.LogInformation("Event already processed — skipping");
+                        _channel.BasicAck(ea.DeliveryTag, false);
+                        return;
+                    }
+                }
+
+                // ❌ REMOVED BROKEN LINE:
+                // var input = envelope.Payload;, new JsonSerializerOptions...
 
                 if (input == null)
                 {
@@ -85,14 +141,16 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
                     return;
                 }
 
-                if (string.IsNullOrEmpty(input.EventType))
+                // ✅ FIX 3: use envelope.EventType instead
+                if (string.IsNullOrEmpty(envelope.EventType))
                 {
                     _logger.LogWarning("Missing eventType");
                     _channel.BasicNack(ea.DeliveryTag, false, false);
                     return;
                 }
 
-                switch (input.EventType)
+                // ✅ FIX 4: use envelope.EventType in switch
+                switch (envelope.EventType)
                 {
                     case "ListingCreated":
                     case "ListingUpdated":
@@ -104,8 +162,21 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
                         break;
 
                     default:
-                        _logger.LogWarning("Unknown event type: {EventType}", input.EventType);
+                        _logger.LogWarning("Unknown event type: {EventType}", envelope.EventType);
                         break;
+                }
+
+                // ✅ FIX 5: Save processed event (NEW)
+                using (var db = new SynchronizerDbContext())
+                {
+                    db.ProcessedEvents.Add(new ProcessedEvent
+                    {
+                        EventId = envelope.EventId,
+                        EventType = envelope.EventType,
+                        ProcessedAt = DateTime.UtcNow
+                    });
+
+                    db.SaveChanges();
                 }
 
                 _channel.BasicAck(ea.DeliveryTag, false);
@@ -126,7 +197,7 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
         return Task.CompletedTask;
     }
 
-    private async Task HandleUpsert(IncomingListing input)
+    public async Task HandleUpsert(IncomingListing input)
     {
         var details = input.ListingDetails ?? new ListingDetails();
 
@@ -139,7 +210,7 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
             PersonId = input.PersonGUID,
             Title = details.Title,
             Description = details.Description,
-            Quantity = details.Quantity,
+            Quantity = details.Quantity.ToString(),
             Price = details.Price,
             Condition = details.Condition,
             ZipCode = details.City,
@@ -172,5 +243,4 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
 
         _logger.LogInformation("Upserted {Guid}", post.Guid);
     }
-
 }
