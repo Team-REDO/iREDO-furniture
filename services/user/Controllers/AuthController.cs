@@ -226,6 +226,13 @@ namespace user.Controllers
                 RemovedAt = personRemoved.RemovedAt
             });
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin-test")]
+        public IActionResult AdminTest()
+        {
+            return Ok("Admin only");
+        }
     }
 
 }
