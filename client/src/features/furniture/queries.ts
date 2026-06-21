@@ -1,8 +1,8 @@
 import { queryOptions } from "@tanstack/react-query";
-import type { ListingItem } from "@/features/furniture/types";
+import type { TListingItem } from "@/features/furniture/types";
 
 type FurnitureItemsResult = {
-  furniture: ListingItem[];
+  furniture: TListingItem[];
   furnitureTotal?: number;
 };
 
@@ -25,7 +25,7 @@ export function furnitureItemsQueryOptions() {
 // ___________________________
 
 type FurnitureItemsResult2 = {
-  furniture: ListingItem[];
+  furniture: TListingItem[];
   furnitureTotal: number;
 };
 

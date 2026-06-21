@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, useCarousel } from "@/components/ui/carousel";
-import type { ListingItem } from "@/features/furniture/types";
+import type { TListingItem } from "@/features/furniture/types";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 const fallbackImages = [
@@ -12,7 +12,7 @@ const fallbackImages = [
   "https://images.unsplash.com/photo-1493666438817-866a91353ca9?auto=format&fit=crop&w=1200&q=80",
 ];
 
-export type { ListingItem } from "@/features/furniture/types";
+export type { TListingItem as ListingItem } from "@/features/furniture/types";
 
 function ListingCarouselControls() {
   const { scrollPrev, scrollNext } = useCarousel();
@@ -60,9 +60,12 @@ function ListingCarouselControls() {
   );
 }
 
-export function ListingCard({ title, price, city, images }: ListingItem) {
-  const listingImages = images.length > 0 ? images : fallbackImages;
+export function ListingCard({ title, price, condition, size, city, images, categories }: TListingItem) {
+  const listingImages = images.length > 0 ? images.map((image) => image.imageUrl) : fallbackImages;
   const safeFallbackImage = fallbackImages[0];
+
+  // const category = categories[0]?.categoryName ?? "Uncategorized";
+  // const subcategory = categories[0]?.subcategories[0]?.subcategoryName;
 
   return (
     <Card className="relative w-full pt-0">
@@ -70,7 +73,7 @@ export function ListingCard({ title, price, city, images }: ListingItem) {
         <Carousel className="w-full select-none touch-pan-y" opts={{ loop: true, direction: "ltr", dragFree: false, skipSnaps: false }}>
           <CarouselContent className="ml-0">
             {listingImages.map((src, index) => (
-              <CarouselItem key={src} className="pl-0">
+              <CarouselItem key={`${src}-${index}`} className="pl-0">
                 <div className="relative aspect-video w-full overflow-hidden">
                   <div className="absolute inset-0 z-10 bg-black/35" />
                   <img
@@ -90,16 +93,74 @@ export function ListingCard({ title, price, city, images }: ListingItem) {
           <ListingCarouselControls />
         </Carousel>
       </div>
+
       <CardHeader>
         <CardAction>
-          <Badge variant="secondary">{city}</Badge>
+          <Badge variant="secondary">{condition}</Badge>
         </CardAction>
+
         <CardTitle className="line-clamp-1">{title}</CardTitle>
-        <CardDescription>${price.toLocaleString()}</CardDescription>
+
+        {/* <CardDescription>
+          {category}
+          {subcategory ? ` · ${subcategory}` : ""}
+        </CardDescription> */}
+
+        <CardDescription>{city}</CardDescription>
+
+        <CardDescription>{price.toLocaleString()} kr.</CardDescription>
       </CardHeader>
+
       <CardFooter>
         <Button className="w-full">View Listing</Button>
       </CardFooter>
     </Card>
   );
 }
+
+// export function ListingCard({ title, price, condition, size, images }: TListingItem) {
+//   const listingImages = images.length > 0 ? images : fallbackImages;
+//   const safeFallbackImage = fallbackImages[0];
+
+//   return (
+//     <Card className="relative w-full pt-0">
+//       <div className="relative">
+//         <Carousel className="w-full select-none touch-pan-y" opts={{ loop: true, direction: "ltr", dragFree: false, skipSnaps: false }}>
+//           <CarouselContent className="ml-0">
+//             {listingImages.map((src, index) => (
+//               <CarouselItem key={src} className="pl-0">
+//                 <div className="relative aspect-video w-full overflow-hidden">
+//                   <div className="absolute inset-0 z-10 bg-black/35" />
+//                   <img
+//                     src={src}
+//                     alt={`Listing image ${index + 1}`}
+//                     className="relative z-0 h-full w-full object-cover"
+//                     draggable={false}
+//                     onError={(event) => {
+//                       event.currentTarget.onerror = null;
+//                       event.currentTarget.src = safeFallbackImage;
+//                     }}
+//                   />
+//                 </div>
+//               </CarouselItem>
+//             ))}
+//           </CarouselContent>
+//           <ListingCarouselControls />
+//         </Carousel>
+//       </div>
+//       <CardHeader>
+//         <CardAction>
+//           {/* <Badge variant="secondary">{city}</Badge> */}
+//           <Badge variant="secondary">{condition}</Badge>
+//         </CardAction>
+//         <CardTitle className="line-clamp-1">{title}</CardTitle>
+//         <CardDescription>
+//           ${price.toLocaleString()} · Size {size}
+//         </CardDescription>
+//       </CardHeader>
+//       <CardFooter>
+//         <Button className="w-full">View Listing</Button>
+//       </CardFooter>
+//     </Card>
+//   );
+// }

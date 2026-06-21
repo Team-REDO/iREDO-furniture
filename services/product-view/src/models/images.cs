@@ -1,19 +1,16 @@
-using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace Images
+namespace Images;
+
+[BsonIgnoreExtraElements]
+public class Image
 {
-    [BsonIgnoreExtraElements]
-    public class Image
-    {
-        [BsonElement("imageId")]
-        public string? ImageId { get; set; }
+    [BsonElement("imageId")]
+    public string? ImageId { get; set; }
 
-        // Business identifier (your domain identity)
-        [BsonElement("imageGuid")]
-        public string ImageGuid { get; set; } = Guid.NewGuid().ToString();
+    [BsonElement("imageGuid")]
+    public string? ImageGuid { get; set; }
 
-        [BsonElement("url")]
-        public string Url { get; set; } = string.Empty;
-    }
+    [BsonElement("url")]
+    public string? ImageUrl { get; set; }
 }

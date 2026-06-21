@@ -1,18 +1,17 @@
-using Subcategories;
 using MongoDB.Bson.Serialization.Attributes;
+using Subcategories;
 
-namespace Categories
+namespace Categories;
+
+[BsonIgnoreExtraElements]
+public class Category
 {
-    [BsonIgnoreExtraElements]
-    public class Category
-    {
-        [BsonElement("catid")]
-        public string? catId { get; set; }
+    [BsonElement("catid")]
+    public string? CatId { get; set; }
 
-        [BsonElement("name")]
-        public string? Name { get; set; }
+    [BsonElement("name")]
+    public string? CategoryName { get; set; }
 
-        [BsonElement("subcats")]
-        public List<Subcategory> Subcats { get; set; } = new();
-    }
+    [BsonElement("subcats")]
+    public List<Subcategory> Subcategories { get; set; } = new();
 }
