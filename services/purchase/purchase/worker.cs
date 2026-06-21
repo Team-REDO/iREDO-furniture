@@ -10,6 +10,8 @@ using Purchase.Enums;
 using service;
 using models;
 using service.Grapql;
+using DTO;
+using service.interfaces;
 
 public class PurchaseConsumerWorker : BackgroundService
 {
@@ -17,17 +19,20 @@ public class PurchaseConsumerWorker : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IHttpClientFactory _httpClientFactory;
 
+    private readonly IRabbitPublisher rabbitPublisher;
+
     private IConnection? _connection;
     private IModel? _channel;
 
     public PurchaseConsumerWorker(
         ILogger<PurchaseConsumerWorker> logger,
         IServiceScopeFactory scopeFactory,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,IRabbitPublisher publisher)
     {
         _logger = logger;
         _scopeFactory = scopeFactory;
         _httpClientFactory = httpClientFactory;
+        rabbitPublisher=publisher;
     }
 
     public override Task StartAsync(CancellationToken cancellationToken)
@@ -46,6 +51,10 @@ public class PurchaseConsumerWorker : BackgroundService
             durable: true,
             exclusive: false,
             autoDelete: false);
+        _channel.QueueDeclare(queue: "purchase.failed",
+            durable: true,
+            exclusive: false,
+            autoDelete: false);
 
         _logger.LogInformation("PurchaseConsumerWorker started");
 
@@ -55,60 +64,31 @@ public class PurchaseConsumerWorker : BackgroundService
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var consumer = new AsyncEventingBasicConsumer(_channel);
-
         consumer.Received += async (sender, ea) =>
+{
+    try
+    {
+        var body = ea.Body.ToArray();
+        var json = Encoding.UTF8.GetString(body);
+
+        var evt = JsonSerializer.Deserialize<EventEnvelope<Order>>(json);
+        
+        if (evt?.payload == null)
         {
-            try
-            {
-                var body = ea.Body.ToArray();
-                var json = Encoding.UTF8.GetString(body);
+            _logger.LogWarning("Invalid message received");
+            return;
+        }
+        
 
-                var evt = JsonSerializer.Deserialize<EventEnvelope<Order>>(json);
+        using var scope = _scopeFactory.CreateScope();
 
-                if (evt?.payload == null)
-                {
-                    _logger.LogWarning("Invalid message received");
-                    return;
-                }
-
-                using var scope = _scopeFactory.CreateScope();
-
-                var processedService = scope.ServiceProvider.GetRequiredService<IProcessedEventService>();
-                var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
-
-                if (await processedService.AlreadyProcessed(evt.eventId))
-                {
-                    _logger.LogInformation("Event already processed: {Id}", evt.eventId);
-                    return;
-                }
-
-                // Example HTTP call to API Gateway
-                var client = _httpClientFactory.CreateClient();
-
-                var response = await client.PostAsync(
-                    "http://api-gateway:8080/purchase",
-                    new StringContent(
-                        JsonSerializer.Serialize(evt.payload),
-                        Encoding.UTF8,
-                        "application/json"
-                    )
-                );
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("API call failed: {Status}", response.StatusCode);
-                    return;
-                }
-
-                await processedService.MarkProcessed(evt.eventId);
-
-                _logger.LogInformation("Processed purchase event {Id}", evt.eventId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing message");
-            }
-        };
+        HandleMessage(evt, scope);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error processing message");
+    }
+};
 
         _channel.BasicConsume(
             queue: "purchase_queue",
@@ -124,4 +104,90 @@ public class PurchaseConsumerWorker : BackgroundService
         _connection?.Close();
         base.Dispose();
     }
+
+private void HandleMessage(EventEnvelope<Order> evt, IServiceScope scope)
+{
+    _logger.LogInformation("Order received: {@Order}", evt.payload.OrderItems);
+    var processedService = scope.ServiceProvider.GetRequiredService<IProcessedEventService>();
+
+
+    try
+    {
+        switch (evt.eventType)
+        {
+            case "ItemReserved":
+                HandleOrderCreated(evt, scope);
+                break;
+
+            case "ItemReservedFailed":
+                HandleOrderCancelled(evt, scope);
+                break;
+
+            default:
+                _logger.LogWarning("Unknown event type: {Type}", evt.eventType);
+                return;
+        }
+
+        // ONLY mark processed if everything succeeded
+        processedService.MarkProcessed(evt.eventId);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Failed processing event {Id}", evt.eventId);
+        throw;
+    }
+}
+
+
+private async Task HandleOrderCancelled(EventEnvelope<Order> evt, IServiceScope scope)
+{
+    var orderService = scope.ServiceProvider.GetRequiredService<IOrderService>();
+
+    evt.payload.OrderStatus = OrderStatus.Cancelled;
+
+    await orderService.UpdateOrder(evt.payload);
+    await rabbitPublisher.PublishAsync(evt.payload,"purchase.failed");
+    await rabbitPublisher.PublishAsync(evt.payload,"purchase_failed");
+
+
+    _logger.LogInformation("Order cancelled: {Id}", evt.payload.orderId);
+
+    
+}
+
+private async Task HandleOrderCreated(EventEnvelope<Order> evt, IServiceScope scope)
+{
+
+    _logger.LogInformation("Order received: {@Order}", evt.payload.OrderItems.First().Title);
+
+    var client = _httpClientFactory.CreateClient();
+    var json = JsonSerializer.Serialize(evt.payload, new JsonSerializerOptions
+{
+    PropertyNamingPolicy = null, // keep exact casing (VERY IMPORTANT)
+    PropertyNameCaseInsensitive = true
+});
+
+var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+var response = await client.PostAsync(
+    "http://localhost:8080/purchase",
+    content
+);
+    if (!response.IsSuccessStatusCode)
+    {
+        var error = await response.Content.ReadAsStringAsync();
+        _logger.LogError("Purchase API failed: {Error}", error);
+        throw new Exception("Purchase API call failed");
+    }
+
+    var result = await response.Content.ReadFromJsonAsync<Checkout>();
+
+    if (result == null || string.IsNullOrEmpty(result.CheckoutUrl))
+    {
+        _logger.LogError("Invalid checkout response");
+        throw new Exception("Invalid checkout response");
+    }
+
+    _logger.LogInformation("Checkout created: {Url}", result.CheckoutUrl);
+}
 }

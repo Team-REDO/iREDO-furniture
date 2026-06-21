@@ -43,7 +43,7 @@ namespace mutation
         {
             try
             {
-                 await repo.DeleteOrder(order.Id);
+                 await repo.DeleteOrder(order.orderId);
             }
             catch (Exception ex)
             {

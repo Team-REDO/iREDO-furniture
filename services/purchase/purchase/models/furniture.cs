@@ -14,7 +14,6 @@ namespace Furnitures
 public class Furniture
 {
     [BsonId]
-    [BsonRepresentation(BsonType.ObjectId)]
     public string? Id { get; set; }
 
     [BsonElement("sales_post_guid")]

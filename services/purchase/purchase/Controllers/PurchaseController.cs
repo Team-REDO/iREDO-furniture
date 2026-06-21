@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DTO;
+using Microsoft.AspNetCore.Mvc;
+using models;
+using MongoDB.Bson.Serialization.Serializers;
 using Purchase.Models;
 using service.interfaces;
 using Stripe;
@@ -11,7 +14,6 @@ public class PurchaseController : ControllerBase
 
     public PurchaseController()
     {
-        
         _stripe = new StripeService();
     }
 

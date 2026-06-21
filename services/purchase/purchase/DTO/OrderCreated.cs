@@ -7,20 +7,10 @@ namespace DTO
     {
         public string OrderId { get; set; } = Guid.NewGuid().ToString();
 
-        public string UserId { get; set; }
+        public string UserId { get; set; } = string.Empty;
 
-        public List<string> SalesPostGuid { get; set; }
+        public List<string> SalesPostGuid { get; set; }= new List<string>();
 
-        public string Email { get; set; }
-
-        public OrderCreated(string User,List<string> Post,string email)
-        {
-            OrderId= Guid.NewGuid().ToString();
-            UserId=User;
-            SalesPostGuid=Post;
-            Email=email;
-            
-            
-        }
+        public string Email { get; set; } = string.Empty;
     }
 }

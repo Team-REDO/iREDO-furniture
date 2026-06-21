@@ -10,7 +10,7 @@ namespace service
 
         public OrderService(IMongoDatabase mongo)
         {
-            _OrderCollection = mongo.GetCollection<Order>("event_envelopes");
+            _OrderCollection = mongo.GetCollection<Order>("orders");
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace service
         { 
             try
             {
-                return await _OrderCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
+                return await _OrderCollection.Find(r => r.orderId == id).FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
@@ -80,7 +80,7 @@ namespace service
         {
             try
             {
-                await _OrderCollection.DeleteOneAsync(r => r.Id == id);
+                await _OrderCollection.DeleteOneAsync(r => r.orderId == id);
             }
             catch (Exception ex)
             {
@@ -101,7 +101,7 @@ namespace service
                 {
                     throw new Exception();
                 }
-                await _OrderCollection.ReplaceOneAsync(x => x.Id == order.Id,order);
+                await _OrderCollection.ReplaceOneAsync(x => x.orderId == order.orderId,order);
             }
             catch (Exception ex)
             {
