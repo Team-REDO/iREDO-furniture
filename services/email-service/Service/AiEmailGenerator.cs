@@ -47,7 +47,7 @@ public class AiEmailGenerator : IAiEmailGenerator
 
         var requestBody = new
         {
-            model = "meta-llama/llama-3-8b-instruct",
+            model = "nvidia/nemotron-3-ultra-550b-a55b:free",
             messages = new[]
             {
                 new { role = "user", content = prompt }
@@ -58,16 +58,27 @@ public class AiEmailGenerator : IAiEmailGenerator
             "https://openrouter.ai/api/v1/chat/completions",
             new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
         );
+        Console.WriteLine("AI STATUS: " + response.StatusCode);
 
         var json = await response.Content.ReadAsStringAsync();
+        Console.WriteLine("RAW AI RESPONSE:");
+        Console.WriteLine(json);
 
         using var doc = JsonDocument.Parse(json);
 
-        return doc
-            .RootElement
-            .GetProperty("choices")[0]
-            .GetProperty("message")
-            .GetProperty("content")
-            .GetString() ?? "Fallback email content";
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("choices", out var choices) &&
+            choices.GetArrayLength() > 0 &&
+            choices[0].TryGetProperty("message", out var message) &&
+            message.TryGetProperty("content", out var content))
+        {
+            return content.GetString() ?? "Empty AI response";
+        }
+
+        Console.WriteLine("AI RESPONSE FORMAT ERROR:");
+        Console.WriteLine(json);
+
+        return "AI failed. Raw response:\n" + json;
     }
 }

@@ -6,18 +6,18 @@ using Microsoft.Extensions.Hosting;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// Use environment variable instead of appsettings
+// get connection string from env
 var connectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION");
 
 if (string.IsNullOrEmpty(connectionString))
     throw new Exception("MYSQL_CONNECTION is not set");
 
-// register DbContext
+// FIX: no AutoDetect (prevents crash)
 builder.Services.AddDbContext<EmailDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 36)))
 );
 
-// your services
+// services
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IAiEmailGenerator, AiEmailGenerator>();
 
@@ -25,13 +25,32 @@ builder.Services.AddHostedService<Worker>();
 
 var host = builder.Build();
 
+// ensure DB is created
 using (var scope = host.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<EmailDbContext>();
-    db.Database.EnsureCreated(); // creates tables
-}
 
-host.Run();
+    var retries = 10;
+
+    while (retries > 0)
+    {
+        try
+        {
+            Console.WriteLine("Trying to connect to MySQL...");
+            db.Database.EnsureCreated();
+            Console.WriteLine("Database ready!");
+            break;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("MySQL not ready yet... retrying in 5 seconds");
+            Console.WriteLine(ex.Message);
+
+            retries--;
+            Thread.Sleep(5000);
+        }
+    }
+}
 
 host.Run();
 
@@ -46,24 +65,20 @@ host.Run();
 
 /*
 This is the current expected format.
-{
-  "eventId": "123",
-  "eventType": "EmailRequested",
-  "createdAt": "2026-06-18T12:00:00Z",
-  "payload": {
-    "to": "test@test.com",
-    "subject": "Hello",
-    "body": "Hi"
-  }
-}
-
-{
-  "eventId": "test-1",
-  "eventType": "EmailRequested",
-  "payload": {
-    "to": "mpfugl@hotmail.com",
-    "subject": "Hello",
-    "body": "Test message"
-  }
+{ 
+  "eventId": "order-1002", 
+  "eventType": "EmailRequested", 
+  "payload": { 
+    "to": "mpfugl@hotmail.com", 
+    "subject": "Order Confirmation", 
+    "body": { 
+      "customerName": "Michael", 
+      "items": [ 
+        { "name": "Oak Dining Table", "quantity": 1, "price": 4999 }, 
+        { "name": "Dining Chair", "quantity": 4, "price": 799 } 
+      ], 
+      "total": 8195 
+    } 
+  } 
 }
 */

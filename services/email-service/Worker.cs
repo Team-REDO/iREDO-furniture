@@ -101,11 +101,11 @@ public class Worker : BackgroundService
 
             var email = envelope.Payload;
 
-            string finalBody = email.Body;
+            string finalBody = email.Body.ToString();
 
             try
             {
-                finalBody = await _ai.GenerateEmail(email.Subject, email.Body);
+                finalBody = await _ai.GenerateEmail(email.Subject,email.Body.ToString());
             }
             catch (Exception ex)
             {
