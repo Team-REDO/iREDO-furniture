@@ -13,8 +13,8 @@ public class SynchronizerDbContext : DbContext
             throw new Exception("MYSQL_CONNECTION not set");
 
         options.UseMySql(
-            conn,
-            Microsoft.EntityFrameworkCore.ServerVersion.AutoDetect(conn)
-        );
+        conn,
+        new MySqlServerVersion(new Version(8, 0, 0))
+    );
     }
 }

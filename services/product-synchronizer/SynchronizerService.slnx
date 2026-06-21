@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="../unitTests/unitTests.csproj" Id="e7eba614-4c1d-42ac-a62c-1406c5c5f8d2" />
+  <Project Path="../SyncronizerServiceTests/SyncronizerServiceTests.csproj" Id="32cd38c7-edf3-49c8-88d9-f488c74f1259" />
   <Project Path="SynchronizerService.csproj" />
 </Solution>

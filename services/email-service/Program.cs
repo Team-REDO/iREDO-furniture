@@ -1,36 +1,39 @@
-using EmailService.Data;
 using EmailService.Service;
 using EmailService.Services;
 using Microsoft.EntityFrameworkCore;
-using EmailService.Data;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-//Services
+// Use environment variable instead of appsettings
+var connectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION");
+
+if (string.IsNullOrEmpty(connectionString))
+    throw new Exception("MYSQL_CONNECTION is not set");
+
+// register DbContext
+builder.Services.AddDbContext<EmailDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+);
+
+// your services
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IAiEmailGenerator, AiEmailGenerator>();
 
-
-//DbContext
-builder.Services.AddDbContext<EmailDbContext>();
-builder.Services.AddDbContext<EmailDbContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 0))
-    ));
-
-//Worker
 builder.Services.AddHostedService<Worker>();
 
 var host = builder.Build();
+
 using (var scope = host.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<EmailDbContext>();
-
-    db.Database.EnsureCreated(); // creates DB if not exists
-    Seeder.Seed(db);
+    db.Database.EnsureCreated(); // creates tables
 }
-host.Run(); ;
+
+host.Run();
+
+host.Run();
 
 
 // To run RabbitMQ locally, use the following command:
@@ -51,6 +54,16 @@ This is the current expected format.
     "to": "test@test.com",
     "subject": "Hello",
     "body": "Hi"
+  }
+}
+
+{
+  "eventId": "test-1",
+  "eventType": "EmailRequested",
+  "payload": {
+    "to": "mpfugl@hotmail.com",
+    "subject": "Hello",
+    "body": "Test message"
   }
 }
 */

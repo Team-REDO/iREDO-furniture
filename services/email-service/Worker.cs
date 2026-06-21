@@ -1,28 +1,41 @@
+using EmailService.Data;
 using EmailService.Models;
+using EmailService.Service;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
-using EmailService.Data;
-using EmailService.Service;
 
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
-    private IConnection _connection;
-    private IModel _channel;
     private readonly IEmailSender _sender;
     private readonly IAiEmailGenerator _ai;
+    private readonly IServiceProvider _serviceProvider;
 
-    public Worker(ILogger<Worker> logger, IEmailSender sender, IAiEmailGenerator ai)
+    private IConnection _connection;
+    private IModel _channel;
+
+    public Worker(
+        ILogger<Worker> logger,
+        IEmailSender sender,
+        IAiEmailGenerator ai,
+        IServiceProvider serviceProvider)
     {
+        _logger = logger;
         _sender = sender;
         _ai = ai;
-        _logger = logger;
+        _serviceProvider = serviceProvider;
+
+        var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "rabbitmq";
 
         var factory = new ConnectionFactory()
         {
-            HostName = "rabbitmq"
+
+            HostName = host
         };
 
         while (true)
@@ -31,6 +44,9 @@ public class Worker : BackgroundService
             {
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
+
+                Console.WriteLine("✅ Connected to RabbitMQ!");
+
                 break;
             }
             catch
@@ -59,8 +75,6 @@ public class Worker : BackgroundService
             var body = ea.Body.ToArray();
             var json = Encoding.UTF8.GetString(body);
 
-            Console.WriteLine($"Raw message: {json}");
-                        
             var envelope = JsonSerializer.Deserialize<EmailEnvelope>(
                 json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -71,8 +85,10 @@ public class Worker : BackgroundService
                 return;
             }
 
-            using (var db = new EmailDbContext())
+            using (var scope = _serviceProvider.CreateScope())
             {
+                var db = scope.ServiceProvider.GetRequiredService<EmailDbContext>();
+
                 var exists = db.ProcessedEvents
                     .Any(e => e.EventId == envelope.EventId);
 
@@ -85,28 +101,25 @@ public class Worker : BackgroundService
 
             var email = envelope.Payload;
 
-            Console.WriteLine($"Processing email to {email.To}");
-
             string finalBody = email.Body;
 
             try
             {
-                Console.WriteLine("Generating AI email...");
                 finalBody = await _ai.GenerateEmail(email.Subject, email.Body);
-                Console.WriteLine("AI generation succeeded");
             }
             catch (Exception ex)
             {
-                Console.WriteLine("AI failed:");
+                Console.WriteLine("AI FAILED:");
                 Console.WriteLine(ex.Message);
-                Console.WriteLine("Using fallback body");
+                Console.WriteLine(ex.StackTrace);
             }
 
             _sender.Send(email.To, email.Subject, finalBody);
 
-           
-            using (var db = new EmailDbContext())
+            using (var scope = _serviceProvider.CreateScope())
             {
+                var db = scope.ServiceProvider.GetRequiredService<EmailDbContext>();
+
                 db.ProcessedEvents.Add(new ProcessedEvent
                 {
                     EventId = envelope.EventId,

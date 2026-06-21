@@ -1,33 +1,51 @@
+# --------------------------
+# Build output
+# --------------------------
+bin/
+obj/
+out/
+
+# --------------------------
 # User-specific files
-*.env
+# --------------------------
+*.user
+*.suo
+*.rsuser
+*.userprefs
+.vscode/
+.vs/
+.idea/
 
-# JavaScript files
-node_modules/
+# --------------------------
+# OS files
+# --------------------------
+.DS_Store
+Thumbs.db
 
-# C# files
+# --------------------------
+# NuGet packages
+# --------------------------
+*.nupkg
+# packages/   (if you use a local packages folder)
 
-# Java files
-
-# Testing files
-
-
-# dev
-.yarn/
-!.yarn/releases
-.vscode/*
-!.vscode/launch.json
-!.vscode/*.code-snippets
-.idea/workspace.xml
-.idea/usage.statistics.xml
-.idea/shelf
-
-# logs
-logs/
+# --------------------------
+# Logs and temporary files
+# --------------------------
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+*.tmp
+*.bak
 
+# --------------------------
+# Environment files (secrets)
+# --------------------------
+.env
+.env.local
+.env.development
+.env.production
 
+# --------------------------
+# ASP.NET / appsettings secrets
+# --------------------------
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
