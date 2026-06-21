@@ -26,21 +26,31 @@ namespace user.Controllers
                 return Unauthorized();
 
             var person = _db.Persons
-                .Include(x => x.Role)
                 .FirstOrDefault(x => x.PersonGuid == guid);
 
             if (person == null)
                 return NotFound("User not found");
-            
-            if (person.Role == null)
-                return Unauthorized();
+
+            if (_db.IsRemoved(person.Id))
+                return Unauthorized("User has been removed"); // is user remove
 
             var address = _db.Address
                 .Where(x => x.PersonId == person.Id)
                 .OrderByDescending(x => x.ModifiedAt)
                 .FirstOrDefault();
 
-            return Ok(address);
+            if (address == null)
+                return NotFound("Address not found");
+
+            return Ok(new AddressResponseDto
+            {
+                Street = address.Street,
+                StreetNumber = address.StreetNumber,
+                FloorDoor = address.FloorDoor,
+                ZipCode = address.ZipCode,
+                City = address.City,
+                Country = address.Country
+            });
         }
 
         [Authorize]
@@ -53,14 +63,13 @@ namespace user.Controllers
                 return Unauthorized();
 
             var person = _db.Persons
-                .Include(x => x.Role)
                 .FirstOrDefault(x => x.PersonGuid == guid);
 
             if (person == null)
                 return NotFound("User not found");
-
-            if (person.Role == null)
-                return Unauthorized();
+            
+            if (_db.IsRemoved(person.Id))
+                return Unauthorized("User has been removed"); // is user remove
 
             var addressEntity = new Address
             {
@@ -70,12 +79,11 @@ namespace user.Controllers
                 FloorDoor = request.FloorDoor,
                 ZipCode = request.ZipCode,
                 City = request.City,
-                Country = request.Country,
-                ModifiedAt = DateTime.UtcNow
+                Country = request.Country
             };
 
-            _db.Address.Add(addressEntity);
-            _db.SaveChanges();
+                _db.Address.Add(addressEntity);
+                _db.SaveChanges();
 
             return Ok(new AddressResponseDto
             {

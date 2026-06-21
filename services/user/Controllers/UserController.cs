@@ -30,10 +30,10 @@ namespace user.Controllers
                 .FirstOrDefault(x => x.PersonGuid == guid);
 
             if (person == null)
-                return NotFound("User not found");
+                return NotFound("User not found"); // is user remove
 
-            if(person.Role == null)
-                return Unauthorized();
+            if (_db.IsRemoved(person.Id))
+                return Unauthorized("User has been removed");
 
             var currentDetails = _db.Person_Details
                 .Where(d => d.PersonId == person.Id)
@@ -51,11 +51,10 @@ namespace user.Controllers
                 Lastname = request.Lastname,
                 PhoneNumber = request.PhoneNumber,
                 Email = currentDetails.Email, // ail comes from so you will could change it
-                ModifiedAt = DateTime.UtcNow
             };
 
-            _db.Person_Details.Add(details);
-            _db.SaveChanges();
+                _db.Person_Details.Add(details);
+                _db.SaveChanges();
 
             return Ok(new DetailsResponseDto
             {

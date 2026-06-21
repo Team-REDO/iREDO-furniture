@@ -20,6 +20,6 @@
 
         public string Country { get; set; } = "";
 
-        public DateTime ModifiedAt { get; set; }
+        public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
     }
 }

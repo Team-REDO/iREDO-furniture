@@ -6,6 +6,6 @@
 
         public string EventType { get; set; } = "";
 
-        public DateTime ProcessedAt { get; set; }
+        public DateTime ProcessedAt { get; set; } = DateTime.UtcNow;
     }
 }

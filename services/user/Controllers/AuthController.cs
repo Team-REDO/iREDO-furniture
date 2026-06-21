@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using System.Data;
 using System.Security.Claims;
 using user.Data;
@@ -10,6 +9,8 @@ using user.DTOs;
 using user.Extensions;
 using user.Services;
 using UserService.DomainModels;
+
+
 namespace user.Controllers
 {
     [ApiController]
@@ -30,7 +31,7 @@ namespace user.Controllers
         [HttpGet("google-response")]
         public async Task<IActionResult> GoogleResponse()
         {
-            Console.WriteLine($"PATH: {Request.Path}");
+
             var result = await HttpContext.AuthenticateAsync("Google");
 
             if (!result.Succeeded)
@@ -48,7 +49,16 @@ namespace user.Controllers
             var details = _db.Person_Details
                 .Include(x => x.Person)
                 .ThenInclude(x => x.Role)
-                .FirstOrDefault(x => x.Email == email);
+                .Where(x => x.Email == email)
+                .OrderByDescending(x => x.ModifiedAt)
+                .FirstOrDefault();
+
+
+            if (details != null && _db.IsRemoved(details.PersonId))
+            {
+                details = null;
+            }
+
 
             if (details == null)
             {
@@ -61,15 +71,16 @@ namespace user.Controllers
                     {
                         PersonGuid = Guid.NewGuid(),
                         RoleId = defaultRole.Id,
+                        CreatedAt = DateTime.UtcNow,
                         Details = new List<PersonDetails>
                         {
                             new PersonDetails
                             {
                                 Email = email,
                                 Firstname = firstName ?? "",
-                                Lastname = lastName ?? "",
-                                ModifiedAt = DateTime.UtcNow
+                                Lastname = lastName ?? ""
                             }
+
                         }
                     };
 
@@ -79,7 +90,9 @@ namespace user.Controllers
                     details = _db.Person_Details
                         .Include(x => x.Person)
                         .ThenInclude(x => x.Role)
-                        .Single(x => x.Email == email);
+                        .Where(x => x.Email == email)
+                        .OrderByDescending(x => x.ModifiedAt)
+                        .FirstOrDefault();
                 }
                 catch (Exception ex)
                 {
@@ -87,7 +100,9 @@ namespace user.Controllers
                     details = _db.Person_Details
                         .Include(x => x.Person)
                         .ThenInclude(x => x.Role)
-                        .Single(x => x.Email == email);
+                        .Where(x => x.Email == email)
+                        .OrderByDescending(x => x.ModifiedAt)
+                        .FirstOrDefault();
                     Console.WriteLine(ex);
                 }
             }
@@ -150,11 +165,8 @@ namespace user.Controllers
             if (person == null)
                 return NotFound("User not found");
 
-            var isRemoved = _db.Person_Removed
-                .Any(x => x.PersonId == person.Id);
-
-            if (isRemoved)
-                return Unauthorized("User has been removed");
+            if (_db.IsRemoved(person.Id))
+                return Unauthorized("User has been removed"); // is user remove
 
             var email = User.FindFirst(ClaimTypes.Email)?.Value;
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
@@ -189,7 +201,6 @@ namespace user.Controllers
                 return Unauthorized();
 
             var person = _db.Persons
-                .Include(x => x.Role)
                 .FirstOrDefault(x => x.PersonGuid == personGuid.Value);
 
             if (person == null)
@@ -203,12 +214,11 @@ namespace user.Controllers
 
             var personRemoved = new PersonRemoved
             {
-                PersonId = person.Id,
-                RemovedAt = DateTime.UtcNow
+                PersonId = person.Id
             };
 
-            _db.Person_Removed.Add(personRemoved);
-            _db.SaveChanges();
+                _db.Person_Removed.Add(personRemoved);
+                _db.SaveChanges();
 
             return Ok(new
             {

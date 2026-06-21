@@ -10,7 +10,7 @@ namespace UserService.DomainModels
 
         public string Name { get; set; } = "";
 
-        public DateTime ModifiedAt { get; set; }
+        public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<SavedListPost> Posts { get; set; } = new List<SavedListPost>();
     }
