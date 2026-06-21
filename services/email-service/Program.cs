@@ -14,11 +14,8 @@ if (string.IsNullOrEmpty(connectionString))
 
 // register DbContext
 builder.Services.AddDbContext<EmailDbContext>(options =>
-    options.UseMySql(
-    connectionString,
-    new MySqlServerVersion(new Version(8, 0, 0)),
-    mySqlOptions => mySqlOptions.EnableRetryOnFailure()
-));
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+);
 
 // your services
 builder.Services.AddScoped<IEmailSender, EmailSender>();
