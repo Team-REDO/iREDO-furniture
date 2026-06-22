@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using EmailService.Data;
 using EmailService.Service;
+using Microsoft.EntityFrameworkCore;
 
 public class Worker : BackgroundService
 {
@@ -13,12 +14,18 @@ public class Worker : BackgroundService
     private IModel _channel;
     private readonly IEmailSender _sender;
     private readonly IAiEmailGenerator _ai;
+    private readonly EmailDbContext _db;
 
-    public Worker(ILogger<Worker> logger, IEmailSender sender, IAiEmailGenerator ai)
+    public Worker(
+        ILogger<Worker> logger,
+        IEmailSender sender,
+        IAiEmailGenerator ai,
+        EmailDbContext db)
     {
         _sender = sender;
         _ai = ai;
         _logger = logger;
+        _db = db;
 
         var factory = new ConnectionFactory()
         {
@@ -60,7 +67,7 @@ public class Worker : BackgroundService
             var json = Encoding.UTF8.GetString(body);
 
             Console.WriteLine($"Raw message: {json}");
-                        
+
             var envelope = JsonSerializer.Deserialize<EmailEnvelope>(
                 json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -71,16 +78,14 @@ public class Worker : BackgroundService
                 return;
             }
 
-            using (var db = new EmailDbContext())
-            {
-                var exists = db.ProcessedEvents
-                    .Any(e => e.EventId == envelope.EventId);
+            // CHECK IF ALREADY PROCESSED
+            var exists = _db.ProcessedEvents
+                .Any(e => e.EventId == envelope.EventId);
 
-                if (exists)
-                {
-                    Console.WriteLine("Event already processed — skipping");
-                    return;
-                }
+            if (exists)
+            {
+                Console.WriteLine("Event already processed — skipping");
+                return;
             }
 
             var email = envelope.Payload;
@@ -104,18 +109,15 @@ public class Worker : BackgroundService
 
             _sender.Send(email.To, email.Subject, finalBody);
 
-           
-            using (var db = new EmailDbContext())
+            //SAVE PROCESSED EVENT
+            _db.ProcessedEvents.Add(new ProcessedEvent
             {
-                db.ProcessedEvents.Add(new ProcessedEvent
-                {
-                    EventId = envelope.EventId,
-                    EventType = envelope.EventType,
-                    ProcessedAt = DateTime.UtcNow
-                });
+                EventId = envelope.EventId,
+                EventType = envelope.EventType,
+                ProcessedAt = DateTime.UtcNow
+            });
 
-                db.SaveChanges();
-            }
+            _db.SaveChanges();
         };
 
         _channel.BasicConsume(

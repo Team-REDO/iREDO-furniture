@@ -2,36 +2,59 @@ using EmailService.Data;
 using EmailService.Service;
 using EmailService.Services;
 using Microsoft.EntityFrameworkCore;
-using EmailService.Data;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-//Services
+//  GET CONNECTION STRING
+var connectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION");
+
+if (string.IsNullOrEmpty(connectionString))
+    throw new Exception("MYSQL_CONNECTION is not set");
+
+//  REGISTER DB CONTEXT
+builder.Services.AddDbContext<EmailDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+);
+
+//  SERVICES
 builder.Services.AddScoped<IEmailSender, EmailSender>();
 builder.Services.AddScoped<IAiEmailGenerator, AiEmailGenerator>();
 
-
-//DbContext
-builder.Services.AddDbContext<EmailDbContext>();
-builder.Services.AddDbContext<EmailDbContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 0))
-    ));
-
-//Worker
+//  WORKER
 builder.Services.AddHostedService<Worker>();
 
 var host = builder.Build();
-using (var scope = host.Services.CreateScope())
+
+//  DB INIT
+var maxRetries = 10;
+var delay = TimeSpan.FromSeconds(5);
+
+for (int i = 0; i < maxRetries; i++)
 {
-    var db = scope.ServiceProvider.GetRequiredService<EmailDbContext>();
+    try
+    {
+        using (var scope = host.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EmailDbContext>();
 
-    db.Database.EnsureCreated(); // creates DB if not exists
-    Seeder.Seed(db);
+            Console.WriteLine("Trying to connect to MySQL...");
+
+            db.Database.EnsureCreated();
+            Seeder.Seed(db);
+
+            Console.WriteLine("Database ready!");
+            break;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("MySQL not ready... retrying in 5 seconds");
+        Console.WriteLine(ex.Message);
+        Thread.Sleep(delay);
+    }
 }
-host.Run(); ;
 
+host.Run();
 
 // To run RabbitMQ locally, use the following command:
 // Make sure to have Docker installed and running on your machine, then execute the command in your terminal.

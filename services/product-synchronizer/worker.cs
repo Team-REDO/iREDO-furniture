@@ -1,63 +1,37 @@
-﻿using System.Linq;
-using System.Text;
-using System.Text.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Collections.Generic;
+using SynchronizerService.Models;
+using System.Drawing;
+using System.Text;
+using System.Text.Json;
+using static System.Net.Mime.MediaTypeNames;
+using SynchronizerService.Services;
 
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private readonly IMongoService _mongo;
+    private readonly IServiceProvider _serviceProvider;
+
     private IConnection _connection;
     private IModel _channel;
 
-    public Worker(ILogger<Worker> logger, IMongoService mongo, bool skipRabbit)
+    public Worker(
+        ILogger<Worker> logger,
+        IMongoService mongo,
+        IServiceProvider serviceProvider)
     {
         _logger = logger;
         _mongo = mongo;
-
-        if (skipRabbit)
-        {
-            return; // ✅ unchanged
-        }
+        _serviceProvider = serviceProvider;
 
         var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "rabbitmq";
         var queueName = Environment.GetEnvironmentVariable("QUEUE_NAME") ?? "listing_queue";
 
-        var factory = new ConnectionFactory()
-        {
-            HostName = host
-        };
+        var factory = new ConnectionFactory() { HostName = host };
 
-        _connection = factory.CreateConnection();
-        _channel = _connection.CreateModel();
-
-        _channel.QueueDeclare(
-            queue: queueName,
-            durable: false,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null
-        );
-    }
-
-    public Worker(ILogger<Worker> logger, IMongoService mongo)
-    {
-        _logger = logger;
-        _mongo = mongo;
-
-        var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "rabbitmq";
-        var queueName = Environment.GetEnvironmentVariable("QUEUE_NAME") ?? "listing_queue";
-
-        var factory = new ConnectionFactory()
-        {
-            HostName = host
-        };
-
-        int retries = 5;
-
-        while (retries > 0)
+        while (true)
         {
             try
             {
@@ -65,8 +39,6 @@ public class Worker : BackgroundService
 
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
-
-                _logger.LogInformation("Connected!");
 
                 _channel.QueueDeclare(
                     queue: queueName,
@@ -76,17 +48,15 @@ public class Worker : BackgroundService
                     arguments: null
                 );
 
-                return;
+                _logger.LogInformation("Connected!");
+                break;
             }
             catch
             {
-                retries--;
-                _logger.LogWarning("Retrying in 5 seconds...");
+                _logger.LogWarning("RabbitMQ not ready... retrying in 5 seconds");
                 Thread.Sleep(5000);
             }
         }
-
-        throw new Exception("Could not connect to RabbitMQ");
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -103,7 +73,8 @@ public class Worker : BackgroundService
 
                 var json = Encoding.UTF8.GetString(ea.Body.ToArray());
 
-                // ✅ FIX 1: Correct envelope deserialization
+                _logger.LogInformation("Raw message: {Json}", json);
+
                 var envelope = JsonSerializer.Deserialize<EventEnvelope<IncomingListing>>(
                     json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -115,33 +86,20 @@ public class Worker : BackgroundService
                     return;
                 }
 
-                var input = envelope.Payload;
+                // DB via DI (IMPORTANT FIX)
+                using var scope = _serviceProvider.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<SynchronizerDbContext>();
 
-                // ✅ FIX 2: Idempotency check (NEW)
-                using (var db = new SynchronizerDbContext())
+                var exists = db.ProcessedEvents
+                    .Any(e => e.EventId == envelope.EventId);
+
+                if (exists)
                 {
-                    var exists = db.ProcessedEvents
-                        .Any(e => e.EventId == envelope.EventId);
-
-                    if (exists)
-                    {
-                        _logger.LogInformation("Event already processed — skipping");
-                        _channel.BasicAck(ea.DeliveryTag, false);
-                        return;
-                    }
-                }
-
-                // ❌ REMOVED BROKEN LINE:
-                // var input = envelope.Payload;, new JsonSerializerOptions...
-
-                if (input == null)
-                {
-                    _logger.LogWarning("Invalid input");
-                    _channel.BasicNack(ea.DeliveryTag, false, false);
+                    _logger.LogInformation("Event already processed — skipping");
+                    _channel.BasicAck(ea.DeliveryTag, false);
                     return;
                 }
 
-                // ✅ FIX 3: use envelope.EventType instead
                 if (string.IsNullOrEmpty(envelope.EventType))
                 {
                     _logger.LogWarning("Missing eventType");
@@ -149,7 +107,16 @@ public class Worker : BackgroundService
                     return;
                 }
 
-                // ✅ FIX 4: use envelope.EventType in switch
+                var input = envelope.Payload;
+
+                if (input == null)
+                {
+                    _logger.LogWarning("Invalid payload");
+                    _channel.BasicNack(ea.DeliveryTag, false, false);
+                    return;
+                }
+
+                // EVENT HANDLING
                 switch (envelope.EventType)
                 {
                     case "ListingCreated":
@@ -161,23 +128,28 @@ public class Worker : BackgroundService
                         await _mongo.DeleteAsync(input.Guid);
                         break;
 
+                    case "ProductCreated":
+                        _logger.LogInformation("Handling ProductCreated");
+
+                        // logging
+                        _logger.LogInformation("Product payload: {Payload}", json);
+
+                        break;
+
                     default:
                         _logger.LogWarning("Unknown event type: {EventType}", envelope.EventType);
                         break;
                 }
 
-                // ✅ FIX 5: Save processed event (NEW)
-                using (var db = new SynchronizerDbContext())
+                // SAVE EVENT (same DI db)
+                db.ProcessedEvents.Add(new ProcessedEvent
                 {
-                    db.ProcessedEvents.Add(new ProcessedEvent
-                    {
-                        EventId = envelope.EventId,
-                        EventType = envelope.EventType,
-                        ProcessedAt = DateTime.UtcNow
-                    });
+                    EventId = envelope.EventId,
+                    EventType = envelope.EventType,
+                    ProcessedAt = DateTime.UtcNow
+                });
 
-                    db.SaveChanges();
-                }
+                await db.SaveChangesAsync();
 
                 _channel.BasicAck(ea.DeliveryTag, false);
             }
@@ -201,46 +173,59 @@ public class Worker : BackgroundService
     {
         var details = input.ListingDetails ?? new ListingDetails();
 
-        var color = details.Colors?.FirstOrDefault();
-        var sub = details.SubCategories?.FirstOrDefault();
-
         var post = new SalesPost
         {
-            Guid = input.Guid,
-            PersonId = input.PersonGUID,
+            SalesPostGuid = input.Guid,
+            PersonGuid = input.PersonGUID,
             Title = details.Title,
             Description = details.Description,
-            Quantity = details.Quantity.ToString(),
+            Size = details.Size,
+            Quantity = details.Quantity,
             Price = details.Price,
             Condition = details.Condition,
-            ZipCode = details.City,
+            City = details.City,
+            ModifiedAt = DateTime.UtcNow,
 
-            Color = color != null
-                ? new ColorDb
+            //  COLORS (LIST)
+            Colors = details.Colors?
+                .Select(c => new ColorDb
                 {
-                    Name = color.Name,
-                    Href = color.Href
-                }
-                : new ColorDb(),
+                    ColorGuid = Guid.NewGuid().ToString(), // temp GUID
+                    Name = c.Name,
+                    Href = c.Href
+                })
+                .ToList() ?? new List<ColorDb>(),
 
-            Category = sub != null
-                ? new CategoryDb
+            // CATEGORIES (LIST WITH SUBCATEGORIES)
+            Categories = details.SubCategories?
+                .Select(sub => new CategoryDb
                 {
-                    Name = sub.Category.Name,
-                    Subcat = new SubCategoryDb
+                    CategoryGuid = Guid.NewGuid().ToString(), // temp GUID
+                    CategoryName = sub.Category.Name,
+
+                    Subcategories = new List<SubCategoryDb>
                     {
-                        Name = sub.Name
+                    new SubCategoryDb
+                    {
+                        SubcategoryGuid = Guid.NewGuid().ToString(),
+                        SubcategoryName = sub.Name
                     }
-                }
-                : new CategoryDb(),
+                    }
+                })
+                .ToList() ?? new List<CategoryDb>(),
 
+            // IMAGES (LIST)
             Images = details.Images?
-                .Select(url => new ImageDb { Url = url })
+                .Select(url => new ImageDb
+                {
+                    ImageGuid = Guid.NewGuid().ToString(),
+                    ImageUrl = url
+                })
                 .ToList() ?? new List<ImageDb>()
         };
 
         await _mongo.UpsertAsync(post);
 
-        _logger.LogInformation("Upserted {Guid}", post.Guid);
+        _logger.LogInformation("Upserted {Guid}", post.SalesPostGuid);
     }
 }

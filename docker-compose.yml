@@ -29,7 +29,7 @@ services:
       - MAILJET_API_KEY=${MAILJET_API_KEY}
       - MAILJET_SECRET=${MAILJET_SECRET}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - MYSQL_CONNECTION=${MYSQL_CONNECTION}
+      - MYSQL_CONNECTION=${MYSQL_EMAIL_CONNECTION}
 
   synchronizerservice:
     build: ./services/product-synchronizer
@@ -38,10 +38,10 @@ services:
       - rabbitmq
       - mysql
     environment:
-      - MONGO_CONNECTION=${MONGO_CONNECTION}
-      - MYSQL_CONNECTION=${MYSQL_CONNECTION}
       - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - MONGO_CONNECTION=${MONGO_CONNECTION}   
       - QUEUE_NAME=${QUEUE_NAME}
+      - MYSQL_CONNECTION=server=mysql;port=3306;database=syncdb;user=root;password=1234
 
   purchaseservice:
     build: ./services/purchase

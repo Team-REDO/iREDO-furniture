@@ -7,14 +7,11 @@ public class SynchronizerDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
-        var conn = Environment.GetEnvironmentVariable("MYSQL_CONNECTION");
+        var connectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION");
 
-        if (string.IsNullOrEmpty(conn))
-            throw new Exception("MYSQL_CONNECTION not set");
+        if (string.IsNullOrEmpty(connectionString))
+            throw new Exception("MYSQL_CONNECTION is not set");
 
-        options.UseMySql(
-            conn,
-            Microsoft.EntityFrameworkCore.ServerVersion.AutoDetect(conn)
-        );
+        options.UseMySql(connectionString, Microsoft.EntityFrameworkCore.ServerVersion.AutoDetect(connectionString));
     }
 }

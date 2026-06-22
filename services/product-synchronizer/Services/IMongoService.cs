@@ -1,5 +1,10 @@
-﻿public interface IMongoService
+﻿using SynchronizerService.Models;
+
+namespace SynchronizerService.Services
 {
-    Task UpsertAsync(SalesPost post);
-    Task DeleteAsync(string guid);
+    public interface IMongoService
+    {
+        Task UpsertAsync(SalesPost post);
+        Task DeleteAsync(string guid);
+    }
 }
