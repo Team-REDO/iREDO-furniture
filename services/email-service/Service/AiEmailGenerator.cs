@@ -47,7 +47,9 @@ public class AiEmailGenerator : IAiEmailGenerator
 
         var requestBody = new
         {
-            model = "meta-llama/llama-3-8b-instruct",
+            //model = "meta-llama/llama-3-8b-instruct",
+            model = "openrouter/free",
+
             messages = new[]
             {
                 new { role = "user", content = prompt }

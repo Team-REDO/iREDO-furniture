@@ -3,9 +3,16 @@
 
 # JavaScript files
 node_modules/
+routeTree.gen.ts
 
 # C# files
+GraphProductView.*
 
+.vs/
+bin/
+obj/
+out/
+/.vs
 # Java files
 
 # Testing files

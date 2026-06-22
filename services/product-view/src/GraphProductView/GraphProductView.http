@@ -1,0 +1,6 @@
+@GraphProductView_HostAddress = http://localhost:5111
+
+GET {{GraphProductView_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
