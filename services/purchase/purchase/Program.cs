@@ -2,42 +2,56 @@ using service.interfaces;
 using Purchase.Models;
 using service;
 using service.Grapql;
+using Stripe;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
+StripeConfiguration.ApiKey = builder.Configuration["STRIPE_SECRET_KEY"];
+
+// MongoDB
 builder.Services.AddSingleton<IMongoClient>(sp =>
 {
-    var connectionString = builder.Configuration.GetConnectionString("MongoDb");
+    var connectionString =
+        builder.Configuration.GetConnectionString("MongoDb")
+    ;
+
     return new MongoClient(connectionString);
 });
 
 builder.Services.AddSingleton<IMongoDatabase>(sp =>
 {
     var client = sp.GetRequiredService<IMongoClient>();
-    return client.GetDatabase("YourDatabaseName");
+    // Must match the database used in seed.js
+    return client.GetDatabase("purchase");
 });
 
-// Swagger/OpenAPI
+// OpenAPI / Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddOpenApi();
 
-// Services
+// Controllers
 builder.Services.AddControllers();
-builder.Services.AddScoped<IOrderService,OrderService>();
-builder.Services.AddScoped(typeof(IEventEnvelopeService<>), typeof(EventEnvelopeService<>));
+
+// Services
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IProcessedEventService, ProcessedEventService>();
+
+builder.Services.AddScoped(
+    typeof(IEventEnvelopeService<>),
+    typeof(EventEnvelopeService<>)
+);
+
 builder.Services.AddScoped<StripeService>();
-builder.Services.AddScoped<IProcessedEventService,ProcessedEventService>();
+
 builder.Services.AddHttpClient();
 
 // RabbitMQ
 builder.Services.AddSingleton<IRabbitPublisher, RabbitPublisher>();
 
-// Background Worker (FIXED 👇)
-var env = builder.Environment.EnvironmentName;
-
-if (env != "Testing")
+// Background worker
+if (!builder.Environment.IsEnvironment("Testing"))
 {
     builder.Services.AddHostedService<PurchaseConsumerWorker>();
 }
@@ -50,27 +64,25 @@ builder.Services
 
 var app = builder.Build();
 
-// Swagger UI
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-
     app.MapOpenApi();
 }
 
-// HTTPS (optional)
-if (!app.Environment.IsEnvironment("Docker"))
+if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+app.MapGet("/success", () => "Payment successful");
+app.MapGet("/cancel", () => "Payment cancelled");
 
+app.UseRouting();
 app.UseAuthorization();
 
-// REST Controllers
 app.MapControllers();
 
-// GraphQL endpoint
 app.MapGraphQL();
 
 app.Run();

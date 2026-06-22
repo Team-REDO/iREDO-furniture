@@ -10,16 +10,22 @@ namespace service.Grapql
     {
         private readonly IMongoCollection<EventEnvelope<T>> _eventCollection;
 
-/// <summary>
-/// Initializes a new instance of the FurnitureService class. The constructor takes an IMongoClient object as a parameter, which is used to connect to the MongoDB database. It retrieves the "FurnitureDB" database and the "Furnitures" collection from the MongoDB client and assigns it to the _furnitureCollection field for further operations.
-/// </summary>
-/// <param name="furniture"></param>
-/// <returns></returns>
+        public EventEnvelopeService(IMongoDatabase mongo)
+        {
+            _eventCollection =
+                mongo.GetCollection<EventEnvelope<T>>("eventcollection"
+            );
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the FurnitureService class. The constructor takes an IMongoClient object as a parameter, which is used to connect to the MongoDB database. It retrieves the "FurnitureDB" database and the "Furnitures" collection from the MongoDB client and assigns it to the _furnitureCollection field for further operations.
+        /// </summary>
+        /// <param name="furniture"></param>
+        /// <returns></returns>
         public async Task AddEvent(EventEnvelope<T> envelope)
         {
             try
             {
-                
                 await _eventCollection.InsertOneAsync(envelope);
             }
             catch (Exception ex)
@@ -30,16 +36,20 @@ namespace service.Grapql
             await _eventCollection.InsertOneAsync(envelope);
         }
 
-/// <summary>
-/// Retrieves all furniture items from the MongoDB collection. The method returns a list of Furniture objects representing all the furniture items stored in the collection. If an error occurs during the retrieval process, it logs the error message and rethrows the exception.
- ///
-/// </summary>
-/// <returns></returns>
+        /// <summary>
+        /// Retrieves all furniture items from the MongoDB collection. The method returns a list of Furniture objects representing all the furniture items stored in the collection. If an error occurs during the retrieval process, it logs the error message and rethrows the exception.
+        ///
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<EventEnvelope<T>>> GetAllEnvelopes()
         {
             try
             {
-                return await _eventCollection.Find(f => true).ToListAsync();
+                var exists = await _eventCollection
+                    .Find(x => x.eventId == envelope.eventId)
+                    .AnyAsync();
+                if (exists)
+                throw new Exception("Event already exists");
             }
             catch (Exception ex)
             {
@@ -48,11 +58,11 @@ namespace service.Grapql
             }
         }
 
-/// <summary>
-/// Retrieves a furniture item from the MongoDB collection based on the provided ID. The method takes an integer parameter representing the ID of the furniture to be retrieved and returns the corresponding Furniture object if found. If an error occurs during the retrieval process, it logs the error message and rethrows the exception.
-/// </summary>
-/// <param name="id">The ID of the furniture to retrieve.</param>
-/// <returns>The retrieved Furniture object, or null if not found.</returns>
+        /// <summary>
+        /// Retrieves a furniture item from the MongoDB collection based on the provided ID. The method takes an integer parameter representing the ID of the furniture to be retrieved and returns the corresponding Furniture object if found. If an error occurs during the retrieval process, it logs the error message and rethrows the exception.
+        /// </summary>
+        /// <param name="id">The ID of the furniture to retrieve.</param>
+        /// <returns>The retrieved Furniture object, or null if not found.</returns>
         public async Task<EventEnvelope<T>> GetEventById(string id)
         {
             try

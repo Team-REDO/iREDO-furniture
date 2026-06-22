@@ -10,7 +10,7 @@ namespace service
 
         public OrderService(IMongoDatabase mongo)
         {
-            _OrderCollection = mongo.GetCollection<Order>("event_envelopes");
+            _OrderCollection = mongo.GetCollection<Order>("orders");
         }
 
         /// <summary>
@@ -58,16 +58,16 @@ namespace service
             }
         }
 
-/// <summary>
-/// Retrieves a report from the MongoDB collection based on the provided ID. The method takes a string parameter representing the ID of the report to be retrieved and returns the corresponding Report object if found. If an error occurs during the retrieval process, it logs the error message and rethrows the exception.
-/// </summary>
-/// <param name="id">The ID of the report to retrieve.</param>
-/// <returns>The retrieved Report object, or null if not found.</returns>
+        /// <summary>
+        /// Retrieves a report from the MongoDB collection based on the provided ID. The method takes a string parameter representing the ID of the report to be retrieved and returns the corresponding Report object if found. If an error occurs during the retrieval process, it logs the error message and rethrows the exception.
+        /// </summary>
+        /// <param name="id">The ID of the report to retrieve.</param>
+        /// <returns>The retrieved Report object, or null if not found.</returns>
         public async Task<Order> GetOrderById(string id)
         { 
             try
             {
-                return await _OrderCollection.Find(r => r.Id == id).FirstOrDefaultAsync();
+                return await _OrderCollection.Find(r => r.orderId == id).FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
@@ -80,7 +80,7 @@ namespace service
         {
             try
             {
-                await _OrderCollection.DeleteOneAsync(r => r.Id == id);
+                await _OrderCollection.DeleteOneAsync(r => r.orderId == id);
             }
             catch (Exception ex)
             {
@@ -101,7 +101,7 @@ namespace service
                 {
                     throw new Exception();
                 }
-                await _OrderCollection.ReplaceOneAsync(x => x.Id == order.Id,order);
+                await _OrderCollection.ReplaceOneAsync(x => x.orderId == order.orderId,order);
             }
             catch (Exception ex)
             {

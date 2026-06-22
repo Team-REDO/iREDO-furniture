@@ -32,18 +32,18 @@ namespace mutation
             }
         }
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="repo"></param>
-/// <param name="order"></param>
-/// <returns></returns>
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="repo"></param>
+        /// <param name="order"></param>
+        /// <returns></returns>
         public async Task DeleteOrder(
         [Service] OrderService repo, Order order)
         {
             try
             {
-                 await repo.DeleteOrder(order.Id);
+                await repo.DeleteOrder(order.orderId);
             }
             catch (Exception ex)
             {

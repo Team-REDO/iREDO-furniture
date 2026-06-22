@@ -51,7 +51,7 @@ public string CreateCheckoutSession(Order order,string eventid)
         Metadata = new Dictionary<string, string>
         {
             {"eventid",eventid},
-            { "orderid", order.Id ?? string.Empty },
+            { "orderid", order.orderId ?? string.Empty },
             { "totalQuantity", order.OrderItems.Sum(x => x.Quantity).ToString() }
         }
     };
@@ -64,6 +64,9 @@ public string CreateCheckoutSession(Order order,string eventid)
 
 public string CreateCheckoutSession(Order order)
 {
+    if (order.OrderItems == null || !order.OrderItems.Any())
+        throw new Exception("Cannot create Stripe session with empty order items"
+    );
     var lineItems = order.OrderItems.Select(item =>
         new SessionLineItemOptions
         {
@@ -72,7 +75,6 @@ public string CreateCheckoutSession(Order order)
             {
                 Currency = "dkk",
 
-                // convert kroner → øre
                 UnitAmount = (long)(item.Price * 100),
 
                 ProductData = new SessionLineItemPriceDataProductDataOptions
@@ -93,7 +95,7 @@ public string CreateCheckoutSession(Order order)
 
         Metadata = new Dictionary<string, string>
         {
-            { "orderid", order.Id ?? string.Empty },
+            { "orderid", order.orderId ?? string.Empty },
             { "totalQuantity", order.OrderItems.Sum(x => x.Quantity).ToString() }
         }
     };

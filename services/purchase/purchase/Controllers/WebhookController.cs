@@ -7,6 +7,7 @@ using Purchase.Models;
 using models;
 using Purchase.Enums;
 using service.Grapql;
+using service.interfaces;
 
 [ApiController]
 [Route("webhook")]
@@ -15,12 +16,15 @@ public class WebhookController : ControllerBase
     private readonly ILogger<WebhookController> _logger;
     private readonly IEventEnvelopeService<Order> _envelopeService;
     private readonly IOrderService _orderService;
+    private readonly IRabbitPublisher _publisher;
 
     public WebhookController(
         ILogger<WebhookController> logger,
         IEventEnvelopeService<Order> envelopeService,
-        IOrderService orderService)
+        IOrderService orderService
+         IOrderService orderService,IRabbitPublisher publisher)
     {
+        _publisher=publisher;
         _logger = logger;
         _envelopeService = envelopeService;
         _orderService = orderService;
@@ -31,17 +35,28 @@ public class WebhookController : ControllerBase
     {
         try
         {
-            var json = await new StreamReader(Request.Body).ReadToEndAsync();
+            Request.EnableBuffering();
+            using var reader = new StreamReader(
+                Request.Body,
+                Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: false,
+                leaveOpen: true
+            );
+            var json = await reader.ReadToEndAsync();
+            Request.Body.Position = 0;
 
             var secret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET");
             if (string.IsNullOrWhiteSpace(secret))
-                return BadRequest("Webhook secret not configured");
+                return BadRequest("Webhook secret not configured"
+            );
 
             var signature = Request.Headers["Stripe-Signature"].FirstOrDefault();
             if (string.IsNullOrWhiteSpace(signature))
-                return BadRequest("Missing Stripe-Signature header");
+                return BadRequest("Missing Stripe-Signature header"
+            );  
 
             var stripeEvent = EventUtility.ConstructEvent(json, signature, secret);
+            _logger.LogInformation("stripe acessed");
 
             // =====================================================
             // SUCCESS: Checkout completed
@@ -51,8 +66,11 @@ public class WebhookController : ControllerBase
                 if (stripeEvent.Data.Object is not Session session)
                     return BadRequest("Invalid session payload");
 
-                if (!session.Metadata.TryGetValue("orderId", out var orderId))
-                    return BadRequest("Missing orderId metadata");
+                if (!session.Metadata.TryGetValue("orderid", out var orderId))
+                    return BadRequest("Missing orderId metadata"
+                );
+
+                _logger.LogInformation($"{orderId}");
 
                 // FIX 1: Use OrderService (source of truth)
                 var order = await _orderService.GetOrderById(orderId);
@@ -91,13 +109,15 @@ public class WebhookController : ControllerBase
             // =====================================================
             // FAILURE: Payment failed
             // =====================================================
-            if (stripeEvent.Type == "payment_intent.payment_failed" || stripeEvent.Type== "checkout.session.expired")
+            if (stripeEvent.Type == "payment_intent.payment_failed")
             {
                 if (stripeEvent.Data.Object is not PaymentIntent intent)
-                    return BadRequest("Invalid payment intent");
+                    return BadRequest("Invalid payment intent"
+                );
 
-                if (!intent.Metadata.TryGetValue("orderId", out var orderId))
-                    return BadRequest("Missing orderId metadata");
+                if (!intent.Metadata.TryGetValue("orderid", out var orderId))
+                    return BadRequest("Missing orderId metadata"
+                );
 
                 var order = await _orderService.GetOrderById(orderId);
                 if (order == null)
@@ -123,7 +143,9 @@ public class WebhookController : ControllerBase
                     payload = order,
                     published = false
                 };
-
+                
+                await _publisher.PublishAsync(envelope,"purchase.failed");
+                await _publisher.PublishAsync(envelope,"purchase_failed");
                 await _envelopeService.AddEvent(envelope);
 
                 _logger.LogInformation("OrderFailed processed for {OrderId}", orderId);
@@ -135,8 +157,9 @@ public class WebhookController : ControllerBase
         }
         catch (StripeException ex)
         {
-            _logger.LogError(ex, "Stripe webhook error");
-            return BadRequest();
+            _logger.LogError("Stripe webhook failed: {Message}", ex.Message);
+            _logger.LogError(ex.StackTrace);
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
