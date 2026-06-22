@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
 
   rabbitmq:
@@ -17,16 +19,32 @@ services:
     networks:
       - backend
 
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: furnitures
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-seed:/docker-entrypoint-initdb.d
+    networks:
+      - backend
+    restart: unless-stopped
+
   purchaseservice:
     build:
       context: .
       dockerfile: DockerFile
     container_name: purchaseservice
     ports:
-      - "5001:8080"
+      - "5258:8080"
     depends_on:
       rabbitmq:
         condition: service_healthy
+      mongo:
+        condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
@@ -36,12 +54,13 @@ services:
       RABBITMQ_USER: guest
       RABBITMQ_PASSWORD: guest
 
-      STRIPE_API_KEY: pk_test_xxx
-      STRIPE_SECRET_KEY: sk_test_xxx
-      STRIPE_WEBHOOK_SECRET: whsec_xxx
+      MONGO_CONNECTION: mongodb://mongo:27017
     networks:
       - backend
     restart: unless-stopped
 
 networks:
   backend:
+
+volumes:
+  mongo_data:

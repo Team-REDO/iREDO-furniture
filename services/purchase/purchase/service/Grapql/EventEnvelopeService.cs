@@ -10,6 +10,12 @@ namespace service.Grapql
     {
         private readonly IMongoCollection<EventEnvelope<T>> _eventCollection;
 
+        public EventEnvelopeService(IMongoDatabase mongo)
+        {
+    _eventCollection =
+        mongo.GetCollection<EventEnvelope<T>>("eventcollection");
+    }
+
 /// <summary>
 /// Initializes a new instance of the FurnitureService class. The constructor takes an IMongoClient object as a parameter, which is used to connect to the MongoDB database. It retrieves the "FurnitureDB" database and the "Furnitures" collection from the MongoDB client and assigns it to the _furnitureCollection field for further operations.
 /// </summary>
@@ -19,9 +25,12 @@ namespace service.Grapql
         {
             try
             {
-                
-                await _eventCollection.InsertOneAsync(envelope);
-            }
+                var exists = await _eventCollection
+                .Find(x => x.eventId == envelope.eventId)
+                .AnyAsync();
+                if (exists)
+                throw new Exception("Event already exists");
+                }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error adding furniture: {ex.Message}");

@@ -1,9 +1,7 @@
 namespace DTO
 {
-    public class CheckoutUrl
+    public class Checkout
     {
-        public string Url { get; set; }
-
-        public string eventid { get; set; }
+    public string CheckoutUrl { get; set; }
     }
 }
