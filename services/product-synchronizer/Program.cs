@@ -44,12 +44,45 @@ host.Run();
 /*
  current expected json update format:
  {
-  "eventId": "sync-test-1",
-  "eventType": "ProductCreated",
+  "eventId": "test-listing-001",
+  "eventType": "ListingCreated",
   "payload": {
-    "name": "Test Chair",
-    "price": 499,
-    "quantity": 2
+    "guid": "listing-123",
+    "personGUID": "user-456",
+    "listingDetails": {
+      "title": "Modern Chair",
+      "description": "A very nice modern chair in great condition",
+      "size": "Medium",
+      "quantity": 2,
+      "price": 499.99,
+      "condition": "Used - Like New",
+      "city": "Copenhagen",
+
+      "colors": [
+        {
+          "name": "Black",
+          "href": "/colors/black"
+        },
+        {
+          "name": "White",
+          "href": "/colors/white"
+        }
+      ],
+
+      "subCategories": [
+        {
+          "name": "Chairs",
+          "category": {
+            "name": "Furniture"
+          }
+        }
+      ],
+
+      "images": [
+        "https://example.com/image1.jpg",
+        "https://example.com/image2.jpg"
+      ]
+    }
   }
 }
  */
