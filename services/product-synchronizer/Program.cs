@@ -1,16 +1,28 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SynchronizerService.Services;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+//GET CONNECTION STRING FROM ENV
+var connectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION");
+
+if (string.IsNullOrEmpty(connectionString))
+    throw new Exception("MYSQL_CONNECTION is not set");
+
+//REGISTER DB CONTEXT PROPERLY
+builder.Services.AddDbContext<SynchronizerDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+);
+
+//SERVICES
 builder.Services.AddSingleton<IMongoService, MongoService>();
 builder.Services.AddHostedService<Worker>();
-builder.Services.AddDbContext<SynchronizerDbContext>();
-
 
 var host = builder.Build();
 
+//RETRY DB CONNECTION (KEEP THIS)
 var maxRetries = 10;
 var delay = TimeSpan.FromSeconds(5);
 

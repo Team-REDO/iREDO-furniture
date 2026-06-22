@@ -19,8 +19,8 @@ namespace SynchronizerService.Models
         public string City { get; set; }
         public DateTime ModifiedAt { get; set; }
 
-        public List<ColorDb> Colors { get; set; } = new();
-        public List<CategoryDb> Categories { get; set; } = new();
+        public ColorDb Colors { get; set; }
+        public CategoryDb Categories { get; set; }
         public List<ImageDb> Images { get; set; } = new();
     }
 }

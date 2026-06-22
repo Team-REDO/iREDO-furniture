@@ -2,11 +2,9 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using SynchronizerService.Models;
-using System.Drawing;
+using SynchronizerService.Services;
 using System.Text;
 using System.Text.Json;
-using static System.Net.Mime.MediaTypeNames;
-using SynchronizerService.Services;
 
 public class Worker : BackgroundService
 {
@@ -72,7 +70,6 @@ public class Worker : BackgroundService
                 _logger.LogInformation("Message received");
 
                 var json = Encoding.UTF8.GetString(ea.Body.ToArray());
-
                 _logger.LogInformation("Raw message: {Json}", json);
 
                 var envelope = JsonSerializer.Deserialize<EventEnvelope<IncomingListing>>(
@@ -86,7 +83,6 @@ public class Worker : BackgroundService
                     return;
                 }
 
-                // DB via DI (IMPORTANT FIX)
                 using var scope = _serviceProvider.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<SynchronizerDbContext>();
 
@@ -116,7 +112,6 @@ public class Worker : BackgroundService
                     return;
                 }
 
-                // EVENT HANDLING
                 switch (envelope.EventType)
                 {
                     case "ListingCreated":
@@ -130,10 +125,7 @@ public class Worker : BackgroundService
 
                     case "ProductCreated":
                         _logger.LogInformation("Handling ProductCreated");
-
-                        // logging
                         _logger.LogInformation("Product payload: {Payload}", json);
-
                         break;
 
                     default:
@@ -141,7 +133,6 @@ public class Worker : BackgroundService
                         break;
                 }
 
-                // SAVE EVENT (same DI db)
                 db.ProcessedEvents.Add(new ProcessedEvent
                 {
                     EventId = envelope.EventId,
@@ -173,6 +164,9 @@ public class Worker : BackgroundService
     {
         var details = input.ListingDetails ?? new ListingDetails();
 
+        var color = details.Colors?.FirstOrDefault();
+        var sub = details.SubCategories?.FirstOrDefault();
+
         var post = new SalesPost
         {
             SalesPostGuid = input.Guid,
@@ -186,35 +180,30 @@ public class Worker : BackgroundService
             City = details.City,
             ModifiedAt = DateTime.UtcNow,
 
-            //  COLORS (LIST)
-            Colors = details.Colors?
-                .Select(c => new ColorDb
+            Colors = color != null
+                ? new ColorDb
                 {
-                    ColorGuid = Guid.NewGuid().ToString(), // temp GUID
-                    Name = c.Name,
-                    Href = c.Href
-                })
-                .ToList() ?? new List<ColorDb>(),
-
-            // CATEGORIES (LIST WITH SUBCATEGORIES)
-            Categories = details.SubCategories?
-                .Select(sub => new CategoryDb
+                    ColorGuid = Guid.NewGuid().ToString(),
+                    Name = color.Name,
+                    Href = color.Href
+                }
+                : null,
+            
+            Categories = sub != null
+                ? new CategoryDb
                 {
-                    CategoryGuid = Guid.NewGuid().ToString(), // temp GUID
+                    CategoryGuid = Guid.NewGuid().ToString(),
                     CategoryName = sub.Category.Name,
 
-                    Subcategories = new List<SubCategoryDb>
-                    {
-                    new SubCategoryDb
+                    Subcategories = new SubCategoryDb
                     {
                         SubcategoryGuid = Guid.NewGuid().ToString(),
                         SubcategoryName = sub.Name
                     }
-                    }
-                })
-                .ToList() ?? new List<CategoryDb>(),
+                }
+                : null,
 
-            // IMAGES (LIST)
+            
             Images = details.Images?
                 .Select(url => new ImageDb
                 {

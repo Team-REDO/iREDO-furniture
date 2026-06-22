@@ -1,6 +1,5 @@
 ﻿using MongoDB.Driver;
 using SynchronizerService.Models;
-using SynchronizerService.Services;
 
 namespace SynchronizerService.Services
 {
@@ -19,11 +18,14 @@ namespace SynchronizerService.Services
 
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase("marketplace");
+
+            // ✅ collection name stays same
             _collection = database.GetCollection<SalesPost>("sales_posts");
         }
 
         public async Task UpsertAsync(SalesPost post)
         {
+            // ✅ use SalesPostGuid (correct schema key)
             var filter = Builders<SalesPost>.Filter.Eq(
                 x => x.SalesPostGuid,
                 post.SalesPostGuid

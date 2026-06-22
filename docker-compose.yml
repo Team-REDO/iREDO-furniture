@@ -1,14 +1,4 @@
-version: '3.8'
-
 services:
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-
   mysql:
     image: mysql:8
     container_name: mysql
@@ -17,6 +7,22 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
     ports:
       - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  purchaseservice:
+    build: ./services/purchase-service
+    container_name: purchaseservice
+    depends_on:
+      - rabbitmq
+      - mysql
 
   emailservice:
     build: ./services/email-service
@@ -39,18 +45,9 @@ services:
       - mysql
     environment:
       - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - MONGO_CONNECTION=${MONGO_CONNECTION}   
-      - QUEUE_NAME=${QUEUE_NAME}
-      - MYSQL_CONNECTION=server=mysql;port=3306;database=syncdb;user=root;password=1234
-
-  purchaseservice:
-    build: ./services/purchase
-    container_name: purchaseservice
-    depends_on:
-      - rabbitmq
-    environment:
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - QUEUE_NAME=${QUEUE_NAME}
       - MONGO_CONNECTION=${MONGO_CONNECTION}
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - QUEUE_NAME=${QUEUE_NAME}
+      - MYSQL_CONNECTION=${MYSQL_SYNC_CONNECTION}
+
+volumes:
+  mysql_data:
