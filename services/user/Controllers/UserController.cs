@@ -5,6 +5,8 @@ using System.Security.Claims;
 using user.Data;
 using user.DTOs;
 using user.Extensions;
+using user.Messaging.Events;
+using user.Messaging.Publishers;
 using user.Services;
 using UserService.DomainModels;
 
@@ -12,13 +14,13 @@ namespace user.Controllers
 {
     [ApiController]
     [Route("api/user")]
-    public class UserController : BaseController
+    public class  UserController : BaseController
     {
-        public UserController(AppDbContext db, JwtService jwtService) : base(db, jwtService) { }
+        public UserController(AppDbContext db, JwtService jwtService, RabbitMqService rabbitMq, UserEventPublisher publisher) : base(db, jwtService, rabbitMq, publisher) { }
 
         [Authorize]
         [HttpPost("AddDetails")]
-        public IActionResult AddDetails(DetailsRequestDto request)
+        public async Task<IActionResult> AddDetails(DetailsRequestDto request)
         {
             var personGuid = User.GetPersonGuid();
 
@@ -53,8 +55,16 @@ namespace user.Controllers
                 Email = currentDetails.Email, // ail comes from so you will could change it
             };
 
-                _db.Person_Details.Add(details);
-                _db.SaveChanges();
+            _db.Person_Details.Add(details);
+            _db.SaveChanges();
+
+            await _publisher.PublishUserUpdated(
+                new UserUpdatedEvent
+                {
+                    PersonGuid = person.PersonGuid
+                }
+            );
+
 
             return Ok(new DetailsResponseDto
             {

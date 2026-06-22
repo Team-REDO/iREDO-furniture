@@ -5,6 +5,8 @@ using System.Security.Claims;
 using user.Data;
 using user.DTOs;
 using user.Extensions;
+using user.Messaging.Events;
+using user.Messaging.Publishers;
 using user.Services;
 using UserService.DomainModels;
 
@@ -14,7 +16,7 @@ namespace user.Controllers
     [Route("api/address")]
     public class AddressController : BaseController
     {
-        public AddressController(AppDbContext db, JwtService jwtService) : base(db, jwtService) { }
+        public AddressController(AppDbContext db, JwtService jwtService, RabbitMqService rabbitMq, UserEventPublisher publisher) : base(db,jwtService,rabbitMq,publisher) { }
 
         [Authorize]
         [HttpGet]
@@ -55,7 +57,7 @@ namespace user.Controllers
 
         [Authorize]
         [HttpPost]
-        public IActionResult AddAddress(AddressRequestDto request)
+        public async Task<IActionResult> AddAddress(AddressRequestDto request)
         {
             var personGuid = User.GetPersonGuid();
 
@@ -82,8 +84,16 @@ namespace user.Controllers
                 Country = request.Country
             };
 
-                _db.Address.Add(addressEntity);
-                _db.SaveChanges();
+            _db.Address.Add(addressEntity);
+            _db.SaveChanges();
+
+
+            await _publisher.PublishUserUpdated(
+                new UserUpdatedEvent
+                {
+                    PersonGuid = person.PersonGuid
+                }
+            );
 
             return Ok(new AddressResponseDto
             {

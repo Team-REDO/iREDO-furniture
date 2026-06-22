@@ -2,11 +2,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RabbitMQ.Client;
 using System.Data;
 using System.Security.Claims;
+using System.Text;
 using user.Data;
 using user.DTOs;
 using user.Extensions;
+using user.Messaging.Events;
+using user.Messaging.Publishers;
 using user.Services;
 using UserService.DomainModels;
 
@@ -17,7 +21,7 @@ namespace user.Controllers
     [Route("api/auth")]
     public class AuthController : BaseController
     {
-        public AuthController(AppDbContext db, JwtService jwtService): base(db,jwtService) { }
+        public AuthController(AppDbContext db, JwtService jwtService, RabbitMqService rabbitMq, UserEventPublisher publisher) : base(db,jwtService,rabbitMq, publisher) { }
 
         [HttpGet("google-login")]
         public IActionResult GoogleLogin()
@@ -123,11 +127,9 @@ namespace user.Controllers
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
 
-            return Redirect("/catalogue");
-            //return Ok(new { token });
+            //return Redirect("/catalogue");
+            return Ok(new { token });
         }
-
-        
 
         [Authorize]
         [HttpPost("logout")]
@@ -193,7 +195,7 @@ namespace user.Controllers
 
         [Authorize]
         [HttpDelete("delete-user")]
-        public IActionResult DeleteUser()
+        public async Task<IActionResult> DeleteUser()
         {
             var personGuid = User.GetPersonGuid();
 
@@ -217,8 +219,15 @@ namespace user.Controllers
                 PersonId = person.Id
             };
 
-                _db.Person_Removed.Add(personRemoved);
-                _db.SaveChanges();
+            _db.Person_Removed.Add(personRemoved);
+            _db.SaveChanges();
+            
+            await _publisher.PublishUserRemoved(
+                new UserRemovedEvent
+                {
+                    PersonGuid = person.PersonGuid
+                }
+            );
 
             return Ok(new
             {
@@ -233,6 +242,30 @@ namespace user.Controllers
         {
             return Ok("Admin only");
         }
+
+
+        //Create a temporary
+
+        [HttpPost("rabbit-test")]
+        public async Task<IActionResult> RabbitTest()
+        {
+            var channel = await _rabbitMq.CreateChannelAsync();
+
+            await channel.ExchangeDeclareAsync(
+                exchange: "redo.events",
+                type: ExchangeType.Topic,
+                durable: true);
+
+            var body = Encoding.UTF8.GetBytes("Hello RabbitMQ");
+
+            await channel.BasicPublishAsync(
+                exchange: "redo.events",
+                routingKey: "user.updated",
+                body: body);
+
+            return Ok("Message published");
+        }
+
     }
 
 }
