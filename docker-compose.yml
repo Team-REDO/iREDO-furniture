@@ -41,20 +41,22 @@
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_DATABASE: furnituredatabase
+      MONGO_INITDB_DATABASE: furnitures
     volumes:
       - mongodb-data:/data/db
-      - ./infrastructure/databases/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js:ro
+      - ./services/product-view/src/mongo-init/seed.js:/docker-entrypoint-initdb.d/01-seed.js:ro
+      # - ./infrastructure/databases/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js:ro
     restart: unless-stopped
 
   product-view:
     container_name: iredo-product-view
     build:
-      context: ./services/product-view/src/GraphProductView
+      context: ./services/product-view
     env_file:
       - ./services/product-view/.env
     environment:
       ASPNETCORE_URLS: http://+:8080
+      MONGO_CONNECTION: mongodb://mongodb:27017
     ports:
       - "${PRODUCT_VIEW_PORT}:8080"
     depends_on:

@@ -1,0 +1,39 @@
+services:
+
+  # --------------------
+  # FILE UPLOADER SERVICE
+  # --------------------
+  fileuploader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: fileuploader
+
+    # FIX: map host 5102 → container 8080
+    ports:
+      - "5102:8080"
+
+    # FIX: ensure ASP.NET Core listens on correct port
+    environment:
+      ASPNETCORE_URLS: "http://+:8080"
+
+    # your env file (R2 config etc.)
+    env_file:
+      - .env
+
+    networks:
+      - backend
+
+    restart: unless-stopped
+
+    logging:
+      driver: json-file
+
+
+# --------------------
+# NETWORK
+# --------------------
+networks:
+  backend:
+    driver: bridge

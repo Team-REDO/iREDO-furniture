@@ -1,138 +1,66 @@
-// MongoDB initialization script for seeding test data
-// This script runs automatically when MongoDB container starts
+// // MongoDB initialization script for seeding test data
+// // This script runs automatically when MongoDB container starts
+db = db.getSiblingDB("furnitures");
 
-const seedData = [
-  {
-    sales_post_guid: "12345678-1234-1234-1234-123456789001",
-    guid: "87654321-4321-4321-4321-987654321001",
-    personId: "user123",
-    title: "Cloud Linen Sofa 3-Seater",
-    description: "Beautiful 3-seater sofa in light gray linen. Comfortable and modern design. Excellent condition.",
-    size: "220x90x85cm",
-    quantity: "1",
-    price: 1890,
-    condition: "like-new",
-    zip_code: "0150",
-    status: {
-      removed: false,
-      date: null
+db.SalesPost.drop();
+
+const createPost = (i, categoryName, subcategoryName, title, price, condition, city, imageKeyword) => ({
+  salesPostGuid: `spg-${i}`,
+  personGuid: `pg-${i}`,
+  title,
+  description: `${title} in ${condition.toLowerCase()} condition.`,
+  size: "M",
+  quantity: 1,
+  price,
+  condition,
+  city,
+  colors: {
+    id: `color-${i}`,
+    name: ["Brown", "Black", "White", "Beige", "Grey"][i % 5],
+    href: ["#8B5A2B", "#000000", "#FFFFFF", "#F5F5DC", "#808080"][i % 5],
+  },
+  categories: {
+    id: `cat-${categoryName.toLowerCase()}`,
+    categoryName,
+    subcategories: {
+      id: `sub-${subcategoryName.toLowerCase().replaceAll(" ", "-")}`,
+      subcategoryName,
     },
-    color: {
-      id: "gray",
-      name: "Gray",
-      href: "#808080"
-    },
-    categories: [{ id: "living-room", name: "Living Room", subcats: [{ id: "sofas", name: "Sofas" }] }],
-    images: [
-      { id: "img-sofa-1", url: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=1200&q=80" },
-      { id: "img-sofa-2", url: "https://images.unsplash.com/photo-1567016432779-094069958ea5?auto=format&fit=crop&w=1200&q=80" },
-      { id: "img-sofa-3", url: "https://images.unsplash.com/photo-1616486701797-0f33f61038aa?auto=format&fit=crop&w=1200&q=80" }
-    ]
   },
-  {
-    sales_post_guid: "12345678-1234-1234-1234-123456789002",
-    guid: "87654321-4321-4321-4321-987654321002",
-    personId: "user456",
-    title: "Compact Two-Seater Sofa",
-    description: "Practical two-seater sofa, perfect for smaller spaces. Dark blue color. Some wear visible.",
-    size: "160x80x80cm",
-    quantity: "1",
-    price: 1390,
-    condition: "good",
-    zip_code: "00100",
-    status: {  removed: false, date: null  },
-    color: { id: "navy-blue", name: "Navy Blue", href: "#000080" },
-    categories: [{ id: "living-room", name: "Living Room", subcats: [{ id: "sofas", name: "Sofas" }] }],
-    images: [
-      { id: "img-sofa-4", url: "https://images.unsplash.com/photo-1616486701797-0f33f61038aa?auto=format&fit=crop&w=1200&q=80" },
-      { id: "img-sofa-5", url: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=80" }
-    ]
-  },
-  {
-    sales_post_guid: "12345678-1234-1234-1234-123456789003",
-    guid: "87654321-4321-4321-4321-987654321003",
-    personId: "user789",
-    title: "Velvet Lounge Armchair",
-    description: "Elegant armchair upholstered in soft burgundy velvet. Perfect for reading nook. Pristine condition.",
-    size: "85x90x95cm",
-    quantity: "1",
-    price: 749,
-    condition: "excellent",
-    zip_code: "10115",
-    status: { removed: false, date: null },
-    color: { id: "burgundy", name: "Burgundy", href: "#800020" },
-    categories: [{ id: "living-room", name: "Living Room", subcats: [{ id: "armchairs", name: "Armchairs" }] }],
-    images: [
-      { id: "img-armchair-1", url: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&w=1200&q=80" },
-      { id: "img-armchair-2", url: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80" }
-    ]
-  },
-  {
-    sales_post_guid: "12345678-1234-1234-1234-123456789004",
-    guid: "87654321-4321-4321-4321-987654321004",
-    personId: "user101",
-    title: "Rattan Accent Chair",
-    description: "Lightweight rattan chair with cushion. Scandinavian style. Perfect for any room.",
-    size: "70x65x75cm",
-    quantity: "1",
-    price: 420,
-    condition: "very-good",
-    zip_code: "1200",
-    status: { removed: false, date: null },
-    color: { id: "natural", name: "Natural", href: "#D2B48C" },
-    categories: [{ id: "living-room", name: "Living Room", subcats: [{ id: "armchairs", name: "Armchairs" }] }],
-    images: [
-      { id: "img-chair-1", url: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?auto=format&fit=crop&w=1200&q=80" }
-    ]
-  },
-  {
-    sales_post_guid: "12345678-1234-1234-1234-123456789005",
-    guid: "87654321-4321-4321-4321-987654321005",
-    personId: "user202",
-    title: "Modern Dining Table",
-    description: "Solid wood dining table, seats 6 comfortably. Walnut finish. Very sturdy construction.",
-    size: "180x90x75cm",
-    quantity: "1",
-    price: 1200,
-    condition: "excellent",
-    zip_code: "3100",
-    status: { removed: false, date: null },
-    color: { id: "walnut", name: "Walnut", href: "#654321" },
-    categories: [{ id: "dining-room", name: "Dining Room", subcats: [{ id: "tables", name: "Tables" }] }],
-    images: [
-      { id: "img-table-1", url: "https://images.unsplash.com/photo-1551632786-de41ec4a5fcd?auto=format&fit=crop&w=1200&q=80" }
-    ]
-  },
-  {
-    sales_post_guid: "12345678-1234-1234-1234-123456789006",
-    guid: "87654321-4321-4321-4321-987654321006",
-    personId: "user303",
-    title: "White Bookshelf Unit",
-    description: "Tall 5-shelf bookshelf in white lacquer. Perfect for storage and display.",
-    size: "80x30x200cm",
-    quantity: "1",
-    price: 350,
-    condition: "good",
-    zip_code: "1050",
-    status: { removed: false, date: null },
-    color: { id: "white", name: "White", href: "#FFFFFF" },
-    categories: [{ id: "storage", name: "Storage", subcats: [{ id: "shelves", name: "Shelves" }] }],
-    images: [
-      { id: "img-bookshelf-1", url: "https://images.unsplash.com/photo-1593642632630-e74f497e2d6c?auto=format&fit=crop&w=1200&q=80" }
-    ]
-  }
-];
+  images: imageKeywords.map((keyword, index) => ({
+    id: `img-${i}-${index + 1}`,
+    imageUrl: `https://source.unsplash.com/800x600/?${keyword}`,
+  })),
+});
 
-// Get the database
-const db = db.getSiblingDB('furnituredatabase');
+db.SalesPost.insertMany([
+  createPost(1, "Couches", "U-shaped", "Large U-shaped Couch", 4500, "USED", "Copenhagen", "u-shaped-sofa"),
+  createPost(2, "Couches", "3-person", "3-person Grey Sofa", 2800, "REFURBISHED", "Aarhus", "grey-sofa"),
+  createPost(3, "Couches", "2-person", "Small 2-person Couch", 1600, "USED", "Odense", "small-sofa"),
+  createPost(4, "Couches", "Chaiselong", "Couch with Chaiselong", 3500, "NEW", "Roskilde", "chaise-sofa"),
+  createPost(5, "Couches", "Sofa bed", "Practical Sofa Bed", 2200, "USED", "Næstved", "sofa-bed"),
 
-// Check if collection already has data
-const count = db.furniture.countDocuments();
+  createPost(6, "Chairs", "Dining chairs", "Set of Dining Chairs", 1200, "USED", "Copenhagen", "dining-chair"),
+  createPost(7, "Chairs", "Armchairs", "Soft Armchair", 900, "REFURBISHED", "Aalborg", "armchair"),
+  createPost(8, "Chairs", "Office chairs", "Ergonomic Office Chair", 1400, "USED", "Herlev", "office-chair"),
+  createPost(9, "Chairs", "Kids chairs", "Small Kids Chair", 300, "NEW", "Hillerød", "kids-chair"),
+  createPost(10, "Chairs", "Rocking chairs", "Wooden Rocking Chair", 1100, "USED", "Køge", "rocking-chair"),
 
-if (count === 0) {
-  // Insert seed data
-  db.furniture.insertMany(seedData);
-  print(`✓ Successfully seeded ${seedData.length} furniture items to MongoDB`);
-} else {
-  print(`ℹ Database already contains ${count} items. Skipping seed.`);
-}
+  createPost(11, "Tables", "Dining tables", "Oak Dining Table", 3200, "USED", "Copenhagen", "dining-table"),
+  createPost(12, "Tables", "Coffee tables", "Modern Coffee Table", 800, "REFURBISHED", "Aarhus", "coffee-table"),
+  createPost(13, "Tables", "Side tables", "Small Side Table", 400, "USED", "Odense", "side-table"),
+  createPost(14, "Tables", "Desks", "Work Desk", 1000, "NEW", "Roskilde", "desk"),
+  createPost(15, "Tables", "Console tables", "Narrow Console Table", 700, "USED", "Næstved", "console-table"),
+
+  createPost(16, "Beds", "180x200", "Large Double Bed 180x200", 4000, "USED", "Copenhagen", "bed"),
+  createPost(17, "Beds", "160x200", "Double Bed 160x200", 3000, "REFURBISHED", "Aarhus", "double-bed"),
+  createPost(18, "Beds", "120x200", "Single Bed 120x200", 1800, "USED", "Odense", "single-bed"),
+  createPost(19, "Beds", "Kids beds", "Children's Bed", 900, "NEW", "Herlev", "kids-bed"),
+  createPost(20, "Beds", "Baby beds", "Baby Crib", 700, "USED", "Køge", "baby-crib"),
+
+  createPost(21, "Lamps", "Ceiling lamps", "Minimalist Ceiling Lamp", 600, "NEW", "Copenhagen", "ceiling-lamp"),
+  createPost(22, "Lamps", "Wall lamps", "Brass Wall Lamp", 450, "USED", "Aalborg", "wall-lamp"),
+  createPost(23, "Lamps", "Table lamps", "Ceramic Table Lamp", 350, "REFURBISHED", "Odense", "table-lamp"),
+  createPost(24, "Lamps", "Floor lamps", "Tall Floor Lamp", 750, "USED", "Roskilde", "floor-lamp"),
+  createPost(25, "Lamps", "Desk lamps", "Adjustable Desk Lamp", 250, "NEW", "Næstved", "desk-lamp"),
+]);
