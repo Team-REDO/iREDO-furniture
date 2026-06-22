@@ -2,11 +2,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using user.Data;
-using user.Services;
-using System.Threading;
 using Microsoft.OpenApi.Models;
+using System.Text;
+using System.Threading;
+using user.Data;
+using user.Messaging.Consumers;
+using user.Messaging.Publishers;
+using user.Services;
+
+
 DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 // DB
@@ -59,6 +63,10 @@ builder.Services.AddAuthentication(options =>
     options.Scope.Add("email");
     options.Scope.Add("profile");
 });
+// RabbitMQ
+builder.Services.AddSingleton<RabbitMqService>();
+builder.Services.AddScoped<UserEventPublisher>();
+builder.Services.AddHostedService<SalesPostRemovedConsumer>();
 
 
 // Add services to the container.
