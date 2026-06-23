@@ -2,10 +2,8 @@ import express from "express";
 import cors from "cors";
 import type { CorsOptions } from "cors";
 import { createProxyMiddleware } from "http-proxy-middleware";
-// import { SERVICES } from "./config/services.js";
 import morgan from "morgan";
 import routes from "./routes/index.js";
-// import { FRONTEND_ORIGINS } from "./config/services.js";
 import { FRONTEND_ORIGINS, FRONTEND_REDIRECT_PATH, SERVICES } from "./config/services.js";
 
 const app = express();
@@ -16,18 +14,6 @@ export const CORS_OPTIONS: CorsOptions = {
 };
 
 app.use(cors(CORS_OPTIONS));
-
-// OAuth callback proxy must be before express.json()
-// app.get(
-//   "/signin-google",
-//   createProxyMiddleware({
-//     target: SERVICES.user,
-//     changeOrigin: false,
-//     pathRewrite: {
-//       "^/signin-google": "/signin-google",
-//     },
-//   }),
-// );
 
 app.get(
   "/signin-google",
@@ -61,19 +47,6 @@ app.get("/health", (_req, res) => {
 app.options("/graphql", cors(CORS_OPTIONS));
 
 app.use("/api", routes);
-
-// app.use(cors(CORS_OPTIONS));
-// app.use(express.json());
-// // HTTP request logging
-// app.use(morgan("combined"));
-
-// app.use(
-//   "/signin-google",
-//   createProxyMiddleware({
-//     target: SERVICES.user,
-//     changeOrigin: false,
-//   }),
-// );
 
 // Global error handler - log stack and return JSON error
 app.use((err: unknown, _req: any, res: any, _next: any) => {
