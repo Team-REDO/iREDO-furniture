@@ -1,16 +1,13 @@
-﻿using Stripe;
+﻿using DTO;
+using Stripe;
 using Stripe.Checkout;
-using DotNetEnv;
-using Purchase.Models;
-using service.interfaces;
-using models;
 
 public class StripeService
 {
-
     public StripeService()
     {
         DotNetEnv.Env.Load();
+
         var key = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY");
 
         if (string.IsNullOrEmpty(key))
@@ -19,86 +16,45 @@ public class StripeService
         StripeConfiguration.ApiKey = key;
     }
 
-public string CreateCheckoutSession(Order order,string eventid)
-{
-    var lineItems = order.OrderItems.Select(item =>
-        new SessionLineItemOptions
-        {
-            Quantity = item.Quantity,
-            PriceData = new SessionLineItemPriceDataOptions
-            {
-                Currency = "dkk",
-
-                // convert kroner → øre
-                UnitAmount = (long)(item.Price * 100),
-
-                ProductData = new SessionLineItemPriceDataProductDataOptions
-                {
-                    Name = item.Title
-                }
-            }
-        }).ToList();
-
-    var options = new SessionCreateOptions
+    public string CreateCheckoutSession(CreateCheckoutRequest order)
     {
-        Mode = "payment",
-
-        SuccessUrl = "http://localhost:5258/success",
-        CancelUrl = "http://localhost:5258/cancel",
-
-        LineItems = lineItems,
-
-        Metadata = new Dictionary<string, string>
-        {
-            {"eventid",eventid},
-            { "orderid", order.orderId ?? string.Empty },
-            { "totalQuantity", order.OrderItems.Sum(x => x.Quantity).ToString() }
-        }
-    };
-
-    var service = new SessionService();
-    var session = service.Create(options);
-
-    return session.Url;
-}
-
-public string CreateCheckoutSession(Order order)
-{
-    if (order.OrderItems == null || !order.OrderItems.Any())
-        throw new Exception("Cannot create Stripe session with empty order items");
-
-    var lineItems = order.OrderItems.Select(item =>
-        new SessionLineItemOptions
-        {
-            Quantity = item.Quantity,
-            PriceData = new SessionLineItemPriceDataOptions
+        var lineItems = order.OrderItems.Select(item =>
+            new SessionLineItemOptions
             {
-                Currency = "dkk",
-                UnitAmount = (long)(item.Price * 100),
-                ProductData = new SessionLineItemPriceDataProductDataOptions
+                Quantity = item.Quantity,
+                PriceData = new SessionLineItemPriceDataOptions
                 {
-                    Name = item.Title
+                    Currency = "dkk",
+                    UnitAmount = (long)(item.Price * 100),
+                    ProductData = new SessionLineItemPriceDataProductDataOptions
+                    {
+                        Name = item.Title
+                    }
                 }
-            }
-        }).ToList();
+            }).ToList();
 
-    var options = new SessionCreateOptions
-    {
-        Mode = "payment",
-        SuccessUrl = "http://localhost:5258/success",
-        CancelUrl = "http://localhost:5258/cancel",
-        LineItems = lineItems,
-        Metadata = new Dictionary<string, string>
+        var options = new SessionCreateOptions
         {
-            { "orderid", order.orderId ?? string.Empty },
-            { "totalQuantity", order.OrderItems.Sum(x => x.Quantity).ToString() }
-        }
-    };
+            Mode = "payment",
+            // SuccessUrl = "http://localhost:5173/payment-success",
+            // CancelUrl = "http://localhost:5173/payment-cancel",
+            SuccessUrl = "http://localhost:3000/payment-success",
+            CancelUrl = "http://localhost:3000/payment-cancel",
+            CustomerEmail = order.Email,
+            LineItems = lineItems,
+            Metadata = new Dictionary<string, string>
+            {
+                { "email", order.Email },
+                { "orderGuid", order.OrderGuid },
+                { "status", order.Status },
+                { "itemCount", order.OrderItems.Count.ToString() },
+                { "totalQuantity", order.OrderItems.Sum(x => x.Quantity).ToString() }
+            }
+        };
 
-    var service = new SessionService();
-    var session = service.Create(options);
+        var service = new SessionService();
+        var session = service.Create(options);
 
-    return session.Url;
-}
-    
+        return session.Url;
+    }
 }

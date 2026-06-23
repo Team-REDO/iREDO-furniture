@@ -1,29 +1,43 @@
 ﻿using DTO;
 using Microsoft.AspNetCore.Mvc;
-using models;
-using MongoDB.Bson.Serialization.Serializers;
-using Purchase.Models;
-using service.interfaces;
-using Stripe;
+using System.Collections.Concurrent;
 
 [ApiController]
 [Route("purchase")]
 public class PurchaseController : ControllerBase
 {
-    private readonly StripeService _stripe;
+    private readonly StripeService _stripe = new();
 
-    public PurchaseController()
+    private static readonly ConcurrentDictionary<string, string> ProcessedOrders = new();
+
+    [HttpPost("checkout")]
+    public IActionResult CreateCheckout([FromBody] CreateCheckoutRequest order)
     {
-        _stripe = new StripeService();
-    }
+        if (string.IsNullOrWhiteSpace(order.OrderGuid))
+            return BadRequest(new { message = "orderGuid is required." });
 
-    [HttpPost]
-    public IActionResult CreatePurchase([FromBody] Order order)
-    {
-        var url = _stripe.CreateCheckoutSession(
-            order
-        );
+        if (order.OrderItems == null || !order.OrderItems.Any())
+            return BadRequest(new { message = "Order must contain at least one item." });
 
-        return Ok(new { checkoutUrl = url });
+        if (ProcessedOrders.TryGetValue(order.OrderGuid, out var existingCheckoutUrl))
+        {
+            return Ok(new
+            {
+                checkoutUrl = existingCheckoutUrl,
+                duplicate = true,
+                message = "Duplicate orderGuid. Returning existing checkout URL."
+            });
+        }
+
+        var checkoutUrl = _stripe.CreateCheckoutSession(order);
+
+        ProcessedOrders.TryAdd(order.OrderGuid, checkoutUrl);
+
+        return Ok(new
+        {
+            checkoutUrl,
+            duplicate = false,
+            message = "New checkout session created."
+        });
     }
 }
