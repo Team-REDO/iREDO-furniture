@@ -38,9 +38,7 @@ var key = Encoding.ASCII.GetBytes(jwtKey);
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
-
-    // THIS is the important one
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultSignInScheme = "Cookies";
 })
 .AddCookie("Cookies") // 👈 REQUIRED FOR GOOGLE
@@ -54,6 +52,21 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = false,
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var token = context.Request.Cookies["token"];
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                context.Token = token;
+            }
+
+            return Task.CompletedTask;
+        }
     };
 })
 .AddGoogle(options =>
@@ -72,12 +85,17 @@ builder.Services.AddHostedService<SalesPostRemovedConsumer>();
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
+    options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.AllowAnyOrigin()
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
+            policy.WithOrigins(
+                    "http://localhost:3000",
+                    "http://localhost:5173",
+                    "http://localhost:8080"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
         });
 });
 builder.Services.AddControllers();
@@ -125,7 +143,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 app.UseAuthentication();//add 
 app.UseAuthorization();
 

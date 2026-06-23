@@ -26,49 +26,36 @@ public class RabbitPublisher : IDisposable, IRabbitPublisher
 
     public Task PublishAsync<T>(T message, string queueName)
     {
-        try
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+
+        var props = _channel.CreateBasicProperties();
+        props.Persistent = true;
+
+        lock (_lock)
         {
-            var body = Encoding.UTF8.GetBytes(
-                JsonSerializer.Serialize(message));
+            // Important for demo: make sure queue exists even if email service is stopped.
+            _channel.QueueDeclare(
+                queue: queueName,
+                durable: false,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
 
-            var props = _channel.CreateBasicProperties();
-            props.Persistent = true;
-
-            lock (_lock) // IMPORTANT: makes channel thread-safe
-            {
-                _channel.BasicPublish(
-                    exchange: "",
-                    routingKey: queueName,
-                    basicProperties: props,
-                    body: body);
-            }
-
-            return Task.CompletedTask;
+            _channel.BasicPublish(
+                exchange: "",
+                routingKey: queueName,
+                basicProperties: props,
+                body: body);
         }
-        catch (Exception ex)
-        {
-            // IMPORTANT: bubble up so OUTBOX worker can retry
-            throw new Exception("Rabbit publish failed", ex);
-        }
+
+        return Task.CompletedTask;
     }
 
     public void Dispose()
     {
-        try
-        {
-            if (_channel.IsOpen)
-                _channel.Close();
-
-            _channel.Dispose();
-
-            if (_connection.IsOpen)
-                _connection.Close();
-
-            _connection.Dispose();
-        }
-        catch
-        {
-            // ignore dispose errors
-        }
+        _channel?.Close();
+        _channel?.Dispose();
+        _connection?.Close();
+        _connection?.Dispose();
     }
 }

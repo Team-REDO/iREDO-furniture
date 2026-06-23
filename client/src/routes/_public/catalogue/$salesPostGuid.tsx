@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { furnitureItemsQueryOptions } from "@/features/furniture/queries";
 import { useFurnitureItems } from "@/hooks/use-furniture";
+import { useAuth } from "@/context/auth.context";
 
 export const Route = createFileRoute("/_public/catalogue/$salesPostGuid")({
   loader: async ({ context }) => {
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/_public/catalogue/$salesPostGuid")({
 });
 
 function RouteComponent() {
+  const { user } = useAuth();
   const { salesPostGuid } = Route.useParams();
   const { data: furnitureItems = [] } = useFurnitureItems();
   const [isBuying, setIsBuying] = useState(false);
@@ -26,10 +28,17 @@ function RouteComponent() {
     setError(null);
 
     try {
+      const email = user?.email;
+
+      if (!email) {
+        setError("You must be logged in to buy an item.");
+        setIsBuying(false);
+        return;
+      }
       const now = new Date().toISOString();
 
       const order = {
-        email: "test@example.com",
+        email,
         orderGuid: crypto.randomUUID(),
         createdAt: now,
         updatedAt: now,
@@ -42,6 +51,15 @@ function RouteComponent() {
           },
         ],
       };
+
+      sessionStorage.setItem(
+        "lastPurchase",
+        JSON.stringify({
+          email: order.email,
+          orderGuid: order.orderGuid,
+          title: item.title,
+        }),
+      );
 
       const response = await fetch("http://localhost:8080/api/purchase/checkout", {
         method: "POST",

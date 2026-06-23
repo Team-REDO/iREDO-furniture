@@ -1,5 +1,6 @@
-// src/context/auth.context.tsx
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import { API_BASE_URL } from "@/config";
+import { API_ROUTES } from "@/config/api-routes";
 
 export type UserRole = "admin" | "moderator" | "user";
 
@@ -12,15 +13,54 @@ export interface AuthUser {
 export interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   setUser: (user: AuthUser | null) => void;
+  refreshUser: () => Promise<AuthUser | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  return <AuthContext.Provider value={{ user, isAuthenticated: !!user, setUser }}>{children}</AuthContext.Provider>;
+  const refreshUser = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}${API_ROUTES.me}`, {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        setUser(null);
+        return null;
+      }
+
+      const currentUser = await response.json();
+      setUser(currentUser);
+      return currentUser;
+    } catch {
+      setUser(null);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    refreshUser().finally(() => setIsLoading(false));
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        setUser,
+        refreshUser,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export const useAuth = () => {

@@ -35,6 +35,7 @@ namespace user.Controllers
         [HttpGet("google-response")]
         public async Task<IActionResult> GoogleResponse()
         {
+            Console.WriteLine("GOOGLE RESPONSE HIT");
 
             var result = await HttpContext.AuthenticateAsync("Google");
 
@@ -118,14 +119,17 @@ namespace user.Controllers
                 userPerson.Role.Name,
                 userPerson.PersonGuid
             );
+            Console.WriteLine("JWT GENERATED");
             //var token = _jwtService.GenerateJwt(details.Email);
             Response.Cookies.Append("token", token, new CookieOptions
             {
                 HttpOnly = true,
-                Secure = false, // true when using HTTPS
+                Secure = false,
                 SameSite = SameSiteMode.Lax,
+                Path = "/",
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
+            Console.WriteLine("TOKEN COOKIE APPENDED");
 
             return Redirect("/catalogue");
         }
