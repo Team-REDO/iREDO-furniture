@@ -92,12 +92,18 @@ public class Worker : BackgroundService
 
             Console.WriteLine($"Processing email to {email.To}");
 
+            // Build a detailed context for the AI using the full payload            
+            var aiContext = BuildAiContext(email);
+
             string finalBody = email.Body;
 
             try
             {
                 Console.WriteLine("Generating AI email...");
-                finalBody = await _ai.GenerateEmail(email.Subject, email.Body);
+
+                // aiContext
+                finalBody = await _ai.GenerateEmail(email.Subject, aiContext);
+
                 Console.WriteLine("AI generation succeeded");
             }
             catch (Exception ex)
@@ -105,11 +111,14 @@ public class Worker : BackgroundService
                 Console.WriteLine("AI failed:");
                 Console.WriteLine(ex.Message);
                 Console.WriteLine("Using fallback body");
+
+                // If AI fails, use the structured order info instead of only "Hi"
+                finalBody = aiContext;
             }
 
             _sender.Send(email.To, email.Subject, finalBody);
 
-            //SAVE PROCESSED EVENT
+            // SAVE PROCESSED EVENT
             _db.ProcessedEvents.Add(new ProcessedEvent
             {
                 EventId = envelope.EventId,
@@ -126,5 +135,44 @@ public class Worker : BackgroundService
             consumer: consumer);
 
         return Task.CompletedTask;
+    }
+
+    // helper method.
+    // This converts the deserialized EmailMessage object into useful text for the AI.
+    private string BuildAiContext(EmailMessage email)
+    {
+        var builder = new StringBuilder();
+
+        builder.AppendLine($"Recipient email: {email.To}");
+        builder.AppendLine($"Customer email: {email.CustomerEmail}");
+        builder.AppendLine($"Purchase status: {email.PurchaseStatus}");
+        builder.AppendLine($"Original body/message: {email.Body}");
+        builder.AppendLine();
+
+        if (email.Items != null && email.Items.Any())
+        {
+            builder.AppendLine("Purchased items:");
+
+            decimal total = 0;
+
+            foreach (var item in email.Items)
+            {
+                var lineTotal = item.Quantity * item.UnitPrice;
+                total += lineTotal;
+
+                builder.AppendLine(
+                    $"- {item.Name}: quantity {item.Quantity}, unit price {item.UnitPrice}, line total {lineTotal}"
+                );
+            }
+
+            builder.AppendLine();
+            builder.AppendLine($"Total price: {total}");
+        }
+        else
+        {
+            builder.AppendLine("No item details were provided.");
+        }
+
+        return builder.ToString();
     }
 }

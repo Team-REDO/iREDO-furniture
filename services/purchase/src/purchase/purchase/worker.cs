@@ -12,6 +12,7 @@ using models;
 using service.Grapql;
 using DTO;
 using service.interfaces;
+using System.Diagnostics.Tracing;
 
 public class PurchaseConsumerWorker : BackgroundService
 {
@@ -146,12 +147,44 @@ private async Task HandleOrderCancelled(EventEnvelope<Order> evt, IServiceScope 
 
     evt.payload.OrderStatus = OrderStatus.Cancelled;
 
-    await orderService.UpdateOrder(evt.payload);
-    await rabbitPublisher.PublishAsync(evt.payload,"purchase.failed");
-    await rabbitPublisher.PublishAsync(evt.payload,"purchase_failed");
+
+    List<EmailItem> items = new List<EmailItem>();
+    foreach (var item in evt.payload.OrderItems)
+    {
+    items.Add(new EmailItem
+    {
+        Name = item.Title,
+        Quantity = item.Quantity,
+        UnitPrice = item.Price
+    });
+    }
+EventEnvelope<EmailMessage> message =new EventEnvelope<EmailMessage>
+{
+    eventType = "EmailRequested",
+    eventVersion = 1,
+    producer = "purchase-service",
+    correlationId = Guid.NewGuid().ToString(),
+    causationId = Guid.NewGuid().ToString(),
+
+    payload = new EmailMessage
+    {
+        To = evt.payload.Email,
+        Subject = "Your order Failed",
+        Body = "Sorry for the problems",
+        PurchaseStatus = "Cancelled",
+        EmailItems = items
+    },
+    published = false,
+    publishedAt = null,
+    publishAttempts = 0,
+    lastPublishError = null
+};
+    rabbitPublisher.PublishAsync(message,"purchase.failed");
+    rabbitPublisher.PublishAsync(evt,"purchase_failed");
 
 
     _logger.LogInformation("Order cancelled: {Id}", evt.payload.orderId);
+    await orderService.UpdateOrder(evt.payload);
 
     
 }
