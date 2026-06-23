@@ -1,4 +1,3 @@
-// src/context/auth.context.tsx
 import { createContext, useContext, useState } from "react";
 
 export type UserRole = "admin" | "moderator" | "user";

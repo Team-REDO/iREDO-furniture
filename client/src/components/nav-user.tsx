@@ -1,4 +1,4 @@
-"use client";
+import { useNavigate } from "@tanstack/react-router";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -30,6 +30,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
 
   return (
     <SidebarMenu>
@@ -95,9 +96,13 @@ export function NavUser({
               </DropdownMenuSub>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOutIcon />
-              Log out
+            <DropdownMenuItem
+              onClick={() => {
+                navigate({ to: "/login" });
+              }}
+            >
+              <CircleUserRound />
+              Log in
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
