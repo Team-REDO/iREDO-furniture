@@ -91,6 +91,7 @@ namespace user.Controllers
             await _publisher.PublishUserUpdated(
                 new UserUpdatedEvent
                 {
+                    EventId = Guid.NewGuid(),
                     PersonGuid = person.PersonGuid
                 }
             );

@@ -1,10 +1,12 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Text;
+using System.Text.Json;
 using user.Data;
 using user.Messaging.Events;
 using user.Services;
+using UserService.DomainModels;
 namespace user.Messaging.Consumers
 {
     public class SalesPostRemovedConsumer : BackgroundService
@@ -65,18 +67,42 @@ namespace user.Messaging.Consumers
 
                 if (evt == null)
                     return;
+                if (evt.EventId == Guid.Empty)
+                {
+                    Console.WriteLine("EventId missing");
+                    return;
+                }
 
                 using var scope = _scopeFactory.CreateScope();
 
                 var db = scope.ServiceProvider
                     .GetRequiredService<AppDbContext>();
 
-                Console.WriteLine($"Received salesPost.removed: {evt.SalesPostGuid}"); //Add temporary logging
+                var alreadyProcessed =
+                    await db.Processed_Events
+                        .AnyAsync(x => x.EventId == evt.EventId);
+                
+                if (alreadyProcessed)
+                {
+                    Console.WriteLine(
+                        $"Skipping duplicate event {evt.EventId}");
+
+                    return;
+                }
+
+                Console.WriteLine($"\nReceived salesPost.removed: {evt.SalesPostGuid}\n"); //Add temporary logging
 
                 var savedPosts = db.Saved_List_Posts
                     .Where(x => x.SalesPostGuid == evt.SalesPostGuid);
 
                 db.Saved_List_Posts.RemoveRange(savedPosts);
+                db.Processed_Events.Add(
+                    new ProcessedEvent
+                    {
+                        EventId = evt.EventId,
+                        EventType = "salesPost.removed"
+                    }
+                );
 
                 await db.SaveChangesAsync();
             };
