@@ -107,7 +107,7 @@ namespace user.Data
                     Name = "Admin"
                 }
             );
-
+            
         }
     }
 }

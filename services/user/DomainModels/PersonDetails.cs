@@ -18,6 +18,6 @@
 
         public string Email { get; set; } = "";
 
-        public DateTime ModifiedAt { get; set; }
+        public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
     }
 }

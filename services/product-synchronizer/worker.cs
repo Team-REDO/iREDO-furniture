@@ -1,34 +1,35 @@
-﻿
-using System.Linq;
-using System.Text;
-using System.Text.Json;
+﻿using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Collections.Generic;
+using SynchronizerService.Models;
+using SynchronizerService.Services;
+using System.Text;
+using System.Text.Json;
 
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
-    private readonly MongoService _mongo;
+    private readonly IMongoService _mongo;
+    private readonly IServiceProvider _serviceProvider;
+
     private IConnection _connection;
     private IModel _channel;
 
-public Worker(ILogger<Worker> logger, MongoService mongo)
+    public Worker(
+        ILogger<Worker> logger,
+        IMongoService mongo,
+        IServiceProvider serviceProvider)
     {
         _logger = logger;
         _mongo = mongo;
+        _serviceProvider = serviceProvider;
 
         var host = Environment.GetEnvironmentVariable("RABBITMQ_HOST") ?? "rabbitmq";
         var queueName = Environment.GetEnvironmentVariable("QUEUE_NAME") ?? "listing_queue";
 
-        var factory = new ConnectionFactory()
-        {
-            HostName = host
-        };
+        var factory = new ConnectionFactory() { HostName = host };
 
-        int retries = 5;
-
-        while (retries > 0)
+        while (true)
         {
             try
             {
@@ -36,8 +37,6 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
 
                 _connection = factory.CreateConnection();
                 _channel = _connection.CreateModel();
-
-                _logger.LogInformation("Connected!");
 
                 _channel.QueueDeclare(
                     queue: queueName,
@@ -47,17 +46,15 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
                     arguments: null
                 );
 
-                return;
+                _logger.LogInformation("Connected!");
+                break;
             }
             catch
             {
-                retries--;
-                _logger.LogWarning("Retrying in 5 seconds...");
+                _logger.LogWarning("RabbitMQ not ready... retrying in 5 seconds");
                 Thread.Sleep(5000);
             }
         }
-
-        throw new Exception("Could not connect to RabbitMQ");
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -73,26 +70,49 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
                 _logger.LogInformation("Message received");
 
                 var json = Encoding.UTF8.GetString(ea.Body.ToArray());
+                _logger.LogInformation("Raw message: {Json}", json);
 
-                var input = JsonSerializer.Deserialize<IncomingListing>(
+                var envelope = JsonSerializer.Deserialize<EventEnvelope<IncomingListing>>(
                     json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                if (input == null)
+                if (envelope == null)
                 {
-                    _logger.LogWarning("Invalid input");
+                    _logger.LogWarning("Invalid envelope");
                     _channel.BasicNack(ea.DeliveryTag, false, false);
                     return;
                 }
 
-                if (string.IsNullOrEmpty(input.EventType))
+                using var scope = _serviceProvider.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<SynchronizerDbContext>();
+
+                var exists = db.ProcessedEvents
+                    .Any(e => e.EventId == envelope.EventId);
+
+                if (exists)
+                {
+                    _logger.LogInformation("Event already processed — skipping");
+                    _channel.BasicAck(ea.DeliveryTag, false);
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(envelope.EventType))
                 {
                     _logger.LogWarning("Missing eventType");
                     _channel.BasicNack(ea.DeliveryTag, false, false);
                     return;
                 }
 
-                switch (input.EventType)
+                var input = envelope.Payload;
+
+                if (input == null)
+                {
+                    _logger.LogWarning("Invalid payload");
+                    _channel.BasicNack(ea.DeliveryTag, false, false);
+                    return;
+                }
+
+                switch (envelope.EventType)
                 {
                     case "ListingCreated":
                     case "ListingUpdated":
@@ -103,10 +123,24 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
                         await _mongo.DeleteAsync(input.Guid);
                         break;
 
+                    case "ProductCreated":
+                        _logger.LogInformation("Handling ProductCreated");
+                        _logger.LogInformation("Product payload: {Payload}", json);
+                        break;
+
                     default:
-                        _logger.LogWarning("Unknown event type: {EventType}", input.EventType);
+                        _logger.LogWarning("Unknown event type: {EventType}", envelope.EventType);
                         break;
                 }
+
+                db.ProcessedEvents.Add(new ProcessedEvent
+                {
+                    EventId = envelope.EventId,
+                    EventType = envelope.EventType,
+                    ProcessedAt = DateTime.UtcNow
+                });
+
+                await db.SaveChangesAsync();
 
                 _channel.BasicAck(ea.DeliveryTag, false);
             }
@@ -126,7 +160,7 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
         return Task.CompletedTask;
     }
 
-    private async Task HandleUpsert(IncomingListing input)
+    public async Task HandleUpsert(IncomingListing input)
     {
         var details = input.ListingDetails ?? new ListingDetails();
 
@@ -135,42 +169,52 @@ public Worker(ILogger<Worker> logger, MongoService mongo)
 
         var post = new SalesPost
         {
-            Guid = input.Guid,
-            PersonId = input.PersonGUID,
+            SalesPostGuid = input.Guid,
+            PersonGuid = input.PersonGUID,
             Title = details.Title,
             Description = details.Description,
+            Size = details.Size,
             Quantity = details.Quantity,
             Price = details.Price,
             Condition = details.Condition,
-            ZipCode = details.City,
+            City = details.City,
+            ModifiedAt = DateTime.UtcNow,
 
-            Color = color != null
+            Colors = color != null
                 ? new ColorDb
                 {
+                    ColorGuid = Guid.NewGuid().ToString(),
                     Name = color.Name,
                     Href = color.Href
                 }
-                : new ColorDb(),
-
-            Category = sub != null
+                : null,
+            
+            Categories = sub != null
                 ? new CategoryDb
                 {
-                    Name = sub.Category.Name,
-                    Subcat = new SubCategoryDb
+                    CategoryGuid = Guid.NewGuid().ToString(),
+                    CategoryName = sub.Category.Name,
+
+                    Subcategories = new SubCategoryDb
                     {
-                        Name = sub.Name
+                        SubcategoryGuid = Guid.NewGuid().ToString(),
+                        SubcategoryName = sub.Name
                     }
                 }
-                : new CategoryDb(),
+                : null,
 
+            
             Images = details.Images?
-                .Select(url => new ImageDb { Url = url })
+                .Select(url => new ImageDb
+                {
+                    ImageGuid = Guid.NewGuid().ToString(),
+                    ImageUrl = url
+                })
                 .ToList() ?? new List<ImageDb>()
         };
 
         await _mongo.UpsertAsync(post);
 
-        _logger.LogInformation("Upserted {Guid}", post.Guid);
+        _logger.LogInformation("Upserted {Guid}", post.SalesPostGuid);
     }
-
 }

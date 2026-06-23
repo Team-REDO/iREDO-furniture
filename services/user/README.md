@@ -464,11 +464,11 @@ curl -X 'POST' \
   -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJhbC5saWxsZXNrb3ZAZ21haWwuY29tIiwiZXhwIjoxNzc5MzA0MDM3fQ.nBtBZ_gWbCtykqbIvuICPXaoSrr7M7i9MN8xWbvh8Ec' \
   -H 'Content-Type: application/json' \
   -d '{
-  "street": "Roarsvej",
-  "streetNumber": "7a",
-  "floorDoor": "1 th",
-  "zipCode": "4700",
-  "city": "Næstved",
+  "street": "test street",
+  "streetNumber": "7327",
+  "floorDoor": "st",
+  "zipCode": "4684",
+  "city": "Fensmark",
   "country": "Denmark"
 }'
 ```

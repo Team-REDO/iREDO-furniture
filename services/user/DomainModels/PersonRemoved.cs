@@ -8,6 +8,6 @@ namespace UserService.DomainModels
 
         public Person? Person { get; set; }
 
-        public DateTime RemovedAt { get; set; }
+        public DateTime RemovedAt { get; set; } = DateTime.UtcNow;
     }
 }

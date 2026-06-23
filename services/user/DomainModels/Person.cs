@@ -10,7 +10,7 @@ namespace UserService.DomainModels
 
         public Role Role { get; set; } = null!;
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public ICollection<PersonDetails> Details { get; set; } = new List<PersonDetails>();
 

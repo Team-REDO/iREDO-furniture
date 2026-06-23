@@ -1,19 +1,31 @@
 using EmailService.Models;
-using EmailService.Services;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
+using EmailService.Data;
+using EmailService.Service;
+using Microsoft.EntityFrameworkCore;
 
 public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private IConnection _connection;
     private IModel _channel;
+    private readonly IEmailSender _sender;
+    private readonly IAiEmailGenerator _ai;
+    private readonly EmailDbContext _db;
 
-    public Worker(ILogger<Worker> logger)
+    public Worker(
+        ILogger<Worker> logger,
+        IEmailSender sender,
+        IAiEmailGenerator ai,
+        EmailDbContext db)
     {
+        _sender = sender;
+        _ai = ai;
         _logger = logger;
+        _db = db;
 
         var factory = new ConnectionFactory()
         {
@@ -34,9 +46,6 @@ public class Worker : BackgroundService
                 Thread.Sleep(5000);
             }
         }
-
-        _connection = factory.CreateConnection();
-        _channel = _connection.CreateModel();
 
         _channel.QueueDeclare(
             queue: "email_queue",
@@ -59,28 +68,36 @@ public class Worker : BackgroundService
 
             Console.WriteLine($"Raw message: {json}");
 
-            var email = JsonSerializer.Deserialize<EmailMessage>(
+            var envelope = JsonSerializer.Deserialize<EmailEnvelope>(
                 json,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-            if (email == null)
+            if (envelope == null)
             {
-                Console.WriteLine("Failed to deserialize email");
+                Console.WriteLine("Invalid envelope");
                 return;
             }
 
+            // CHECK IF ALREADY PROCESSED
+            var exists = _db.ProcessedEvents
+                .Any(e => e.EventId == envelope.EventId);
+
+            if (exists)
+            {
+                Console.WriteLine("Event already processed — skipping");
+                return;
+            }
+
+            var email = envelope.Payload;
+
             Console.WriteLine($"Processing email to {email.To}");
 
-            string finalBody = email.Body; 
+            string finalBody = email.Body;
 
             try
             {
                 Console.WriteLine("Generating AI email...");
-
-                var ai = new AiEmailGenerator();
-
-                finalBody = await ai.GenerateEmail(email.Subject, email.Body);
-
+                finalBody = await _ai.GenerateEmail(email.Subject, email.Body);
                 Console.WriteLine("AI generation succeeded");
             }
             catch (Exception ex)
@@ -90,8 +107,17 @@ public class Worker : BackgroundService
                 Console.WriteLine("Using fallback body");
             }
 
-            var sender = new EmailSender();
-            sender.Send(email.To, email.Subject, finalBody);
+            _sender.Send(email.To, email.Subject, finalBody);
+
+            //SAVE PROCESSED EVENT
+            _db.ProcessedEvents.Add(new ProcessedEvent
+            {
+                EventId = envelope.EventId,
+                EventType = envelope.EventType,
+                ProcessedAt = DateTime.UtcNow
+            });
+
+            _db.SaveChanges();
         };
 
         _channel.BasicConsume(

@@ -1,33 +1,41 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
+using Microsoft.EntityFrameworkCore;
+using RabbitMQ.Client;
+using System.Data;
 using System.Security.Claims;
+using System.Text;
 using user.Data;
 using user.DTOs;
+using user.Extensions;
+using user.Messaging.Events;
+using user.Messaging.Publishers;
 using user.Services;
 using UserService.DomainModels;
+
+
 namespace user.Controllers
 {
     [ApiController]
     [Route("api/auth")]
-    public class AuthController : ControllerBase
+    public class AuthController : BaseController
     {
-        private readonly AppDbContext _db;
-        private readonly JwtService _jwtService;
+        public AuthController(AppDbContext db, JwtService jwtService, RabbitMqService rabbitMq, UserEventPublisher publisher) : base(db,jwtService,rabbitMq, publisher) { }
 
-        public AuthController(AppDbContext db, JwtService jwtService)
+        [HttpGet("google-login")]
+        public IActionResult GoogleLogin()
         {
-            _db = db;
-            _jwtService = jwtService;
+            return Challenge(new AuthenticationProperties
+            {
+                RedirectUri = "/api/auth/google-response"
+            }, "Google");
         }
-
 
         [HttpGet("google-response")]
         public async Task<IActionResult> GoogleResponse()
         {
-            Console.WriteLine($"PATH: {Request.Path}");
+
             var result = await HttpContext.AuthenticateAsync("Google");
 
             if (!result.Succeeded)
@@ -43,7 +51,18 @@ namespace user.Controllers
 
             // 🔍 find existing person
             var details = _db.Person_Details
-                .FirstOrDefault(p => p.Email == email);
+                .Include(x => x.Person)
+                .ThenInclude(x => x.Role)
+                .Where(x => x.Email == email)
+                .OrderByDescending(x => x.ModifiedAt)
+                .FirstOrDefault();
+
+
+            if (details != null && _db.IsRemoved(details.PersonId))
+            {
+                details = null;
+            }
+
 
             if (details == null)
             {
@@ -56,34 +75,50 @@ namespace user.Controllers
                     {
                         PersonGuid = Guid.NewGuid(),
                         RoleId = defaultRole.Id,
+                        CreatedAt = DateTime.UtcNow,
                         Details = new List<PersonDetails>
                         {
                             new PersonDetails
                             {
                                 Email = email,
                                 Firstname = firstName ?? "",
-                                Lastname = lastName ?? "",
-                                ModifiedAt = DateTime.UtcNow
+                                Lastname = lastName ?? ""
                             }
+
                         }
                     };
 
                     _db.Persons.Add(person);
                     _db.SaveChanges();
 
-                    details = person.Details.First();
+                    details = _db.Person_Details
+                        .Include(x => x.Person)
+                        .ThenInclude(x => x.Role)
+                        .Where(x => x.Email == email)
+                        .OrderByDescending(x => x.ModifiedAt)
+                        .FirstOrDefault();
                 }
                 catch (Exception ex)
                 {
                     // fallback in case of race condition / duplicate
                     details = _db.Person_Details
-                        .SingleOrDefault(p => p.Email == email);
+                        .Include(x => x.Person)
+                        .ThenInclude(x => x.Role)
+                        .Where(x => x.Email == email)
+                        .OrderByDescending(x => x.ModifiedAt)
+                        .FirstOrDefault();
+                    Console.WriteLine(ex);
                 }
             }
 
-            // 🎟️ issue JWT
-            var token = _jwtService.GenerateJwt(details.Email);
-
+            var userPerson = details.Person;
+            //  issue JWT
+            var token = _jwtService.GenerateJwt(
+                details.Email,
+                userPerson.Role.Name,
+                userPerson.PersonGuid
+            );
+            //var token = _jwtService.GenerateJwt(details.Email);
             Response.Cookies.Append("token", token, new CookieOptions
             {
                 HttpOnly = true,
@@ -95,76 +130,142 @@ namespace user.Controllers
             return Redirect("/catalogue");
         }
 
-        [HttpGet("google-login")]
-        public IActionResult GoogleLogin()
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
         {
-            return Challenge(new AuthenticationProperties
+            // Remove JWT
+            Response.Cookies.Delete("token");
+
+            // Remove Google/Cookie auth session
+            await HttpContext.SignOutAsync("Cookies");
+
+            return Ok(new
             {
-                RedirectUri = "/api/auth/google-response"
-            }, "Google");
+                message = "Logged out"
+            });
         }
+
+        //POST /api/auth/refresh
+
+
+
+        // ---------------------------------------------------------------------------------------
         [Authorize]
         [HttpGet("me")]
         public IActionResult Me()
         {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
-            return Ok(new { email });
-        }
+            var personGuid = User.GetPersonGuid();
 
-        [Authorize]
-        [HttpPost("add-address")]
-        public IActionResult AddAddress(AddressRequestDto request)
-        {
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            if (personGuid == null)
+                return Unauthorized();
 
-            if (email == null)
+            var person = _db.Persons
+                .FirstOrDefault(x => x.PersonGuid == personGuid.Value);
+
+            if (person == null)
+                return NotFound("User not found");
+
+            if (_db.IsRemoved(person.Id))
+                return Unauthorized("User has been removed"); // is user remove
+
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (email == null || role == null)
                 return Unauthorized();
 
             var details = _db.Person_Details
-                .FirstOrDefault(p => p.Email == email);
+                .Where(x => x.PersonId == person.Id)
+                .OrderByDescending(x => x.ModifiedAt)
+                .FirstOrDefault();
 
-            if (details == null)
+            return Ok(new MeResponseDto
+            {
+                Email = email,
+                Role = role,
+                PersonGuid = personGuid.Value,
+                Firstname = details?.Firstname,
+                Middlename = details?.Middlename,
+                Lastname = details?.Lastname,
+                PhoneNumber = details?.PhoneNumber
+            });
+        }
+
+        [Authorize]
+        [HttpDelete("delete-user")]
+        public async Task<IActionResult> DeleteUser()
+        {
+            var personGuid = User.GetPersonGuid();
+
+            if (personGuid == null)
+                return Unauthorized();
+
+            var person = _db.Persons
+                .FirstOrDefault(x => x.PersonGuid == personGuid.Value);
+
+            if (person == null)
                 return NotFound("User not found");
 
-            // Find existing address
-            var addressEntity = _db.Address
-                .FirstOrDefault(a => a.PersonId == details.PersonId);
+            var alreadyRemoved = _db.Person_Removed
+                .Any(x => x.PersonId == person.Id);
 
-            // Create if missing
-            if (addressEntity == null)
+            if (alreadyRemoved)
+                return Conflict("User already removed");
+
+            var personRemoved = new PersonRemoved
             {
-                addressEntity = new Address
-                {
-                    PersonId = details.PersonId
-
-                };
-
-                _db.Address.Add(addressEntity);
-            }
-
-            // Update values
-            addressEntity.Street = request.Street;
-            addressEntity.StreetNumber = request.StreetNumber;
-            addressEntity.FloorDoor = request.FloorDoor;
-            addressEntity.ZipCode = request.ZipCode;
-            addressEntity.City = request.City;
-            addressEntity.Country = request.Country;
-            addressEntity.ModifiedAt = DateTime.UtcNow;
-
-            _db.SaveChanges();
-
-            var response = new AddressResponseDto
-            {
-                Street = addressEntity.Street,
-                StreetNumber = addressEntity.StreetNumber,
-                FloorDoor = addressEntity.FloorDoor,
-                ZipCode = addressEntity.ZipCode,
-                City = addressEntity.City,
-                Country = addressEntity.Country
+                PersonId = person.Id
             };
 
-            return Ok(response);
+            _db.Person_Removed.Add(personRemoved);
+            _db.SaveChanges();
+
+            await _publisher.PublishUserRemoved(
+                new UserRemovedEvent
+                {
+                    EventId = Guid.NewGuid(),
+                    PersonGuid = person.PersonGuid
+                }
+            );
+
+            return Ok(new
+            {
+                Message = "User marked as removed",
+                RemovedAt = personRemoved.RemovedAt
+            });
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin-test")]
+        public IActionResult AdminTest()
+        {
+            return Ok("Admin only");
+        }
+
+
+        //Create a temporary
+
+        [HttpPost("rabbit-test")]
+        public async Task<IActionResult> RabbitTest()
+        {
+            var channel = await _rabbitMq.CreateChannelAsync();
+
+            await channel.ExchangeDeclareAsync(
+                exchange: "redo.events",
+                type: ExchangeType.Topic,
+                durable: true);
+
+            var body = Encoding.UTF8.GetBytes("Hello RabbitMQ");
+
+            await channel.BasicPublishAsync(
+                exchange: "redo.events",
+                routingKey: "user.updated",
+                body: body);
+
+            return Ok("Message published");
+        }
+
     }
 
 }

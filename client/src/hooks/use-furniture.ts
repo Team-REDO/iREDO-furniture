@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { furnitureItemsQueryOptions, furnitureItemsQueryOptions2 } from "@/features/furniture/queries";
-export type { ListingItem } from "@/features/furniture/types";
+export type { TListingItem as ListingItem } from "@/features/furniture/types";
 
 export interface UseFurnitureItemsOptions {
   usePagination?: boolean;
