@@ -13,13 +13,16 @@ import { Route as PublicRouteRouteImport } from './routes/_public/route'
 import { Route as ProtectedRouteRouteImport } from './routes/_protected/route'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicRegisterRouteImport } from './routes/_public/register'
+import { Route as PublicPaymentSuccessRouteImport } from './routes/_public/payment-success'
+import { Route as PublicPaymentCancelRouteImport } from './routes/_public/payment-cancel'
 import { Route as PublicLoginRouteImport } from './routes/_public/login'
-import { Route as PublicCatalogueRouteImport } from './routes/_public/catalogue'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedMyListingRouteImport } from './routes/_protected/my-listing'
 import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
 import { Route as ProtectedCreateListingRouteImport } from './routes/_protected/create-listing'
 import { Route as ProtectedAdminRouteRouteImport } from './routes/_protected/_admin/route'
+import { Route as PublicCatalogueIndexRouteImport } from './routes/_public/catalogue/index'
+import { Route as PublicCatalogueSalesPostGuidRouteImport } from './routes/_public/catalogue/$salesPostGuid'
 import { Route as ProtectedAdminUsersRouteImport } from './routes/_protected/_admin/users'
 import { Route as ProtectedAdminListingsRouteImport } from './routes/_protected/_admin/listings'
 
@@ -41,14 +44,19 @@ const PublicRegisterRoute = PublicRegisterRouteImport.update({
   path: '/register',
   getParentRoute: () => PublicRouteRoute,
 } as any)
+const PublicPaymentSuccessRoute = PublicPaymentSuccessRouteImport.update({
+  id: '/payment-success',
+  path: '/payment-success',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicPaymentCancelRoute = PublicPaymentCancelRouteImport.update({
+  id: '/payment-cancel',
+  path: '/payment-cancel',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
 const PublicLoginRoute = PublicLoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => PublicRouteRoute,
-} as any)
-const PublicCatalogueRoute = PublicCatalogueRouteImport.update({
-  id: '/catalogue',
-  path: '/catalogue',
   getParentRoute: () => PublicRouteRoute,
 } as any)
 const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
@@ -75,6 +83,17 @@ const ProtectedAdminRouteRoute = ProtectedAdminRouteRouteImport.update({
   id: '/_admin',
   getParentRoute: () => ProtectedRouteRoute,
 } as any)
+const PublicCatalogueIndexRoute = PublicCatalogueIndexRouteImport.update({
+  id: '/catalogue/',
+  path: '/catalogue/',
+  getParentRoute: () => PublicRouteRoute,
+} as any)
+const PublicCatalogueSalesPostGuidRoute =
+  PublicCatalogueSalesPostGuidRouteImport.update({
+    id: '/catalogue/$salesPostGuid',
+    path: '/catalogue/$salesPostGuid',
+    getParentRoute: () => PublicRouteRoute,
+  } as any)
 const ProtectedAdminUsersRoute = ProtectedAdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -92,11 +111,14 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof ProtectedDashboardRoute
   '/my-listing': typeof ProtectedMyListingRoute
   '/profile': typeof ProtectedProfileRoute
-  '/catalogue': typeof PublicCatalogueRoute
   '/login': typeof PublicLoginRoute
+  '/payment-cancel': typeof PublicPaymentCancelRoute
+  '/payment-success': typeof PublicPaymentSuccessRoute
   '/register': typeof PublicRegisterRoute
   '/listings': typeof ProtectedAdminListingsRoute
   '/users': typeof ProtectedAdminUsersRoute
+  '/catalogue/$salesPostGuid': typeof PublicCatalogueSalesPostGuidRoute
+  '/catalogue/': typeof PublicCatalogueIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
@@ -104,11 +126,14 @@ export interface FileRoutesByTo {
   '/dashboard': typeof ProtectedDashboardRoute
   '/my-listing': typeof ProtectedMyListingRoute
   '/profile': typeof ProtectedProfileRoute
-  '/catalogue': typeof PublicCatalogueRoute
   '/login': typeof PublicLoginRoute
+  '/payment-cancel': typeof PublicPaymentCancelRoute
+  '/payment-success': typeof PublicPaymentSuccessRoute
   '/register': typeof PublicRegisterRoute
   '/listings': typeof ProtectedAdminListingsRoute
   '/users': typeof ProtectedAdminUsersRoute
+  '/catalogue/$salesPostGuid': typeof PublicCatalogueSalesPostGuidRoute
+  '/catalogue': typeof PublicCatalogueIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -119,12 +144,15 @@ export interface FileRoutesById {
   '/_protected/dashboard': typeof ProtectedDashboardRoute
   '/_protected/my-listing': typeof ProtectedMyListingRoute
   '/_protected/profile': typeof ProtectedProfileRoute
-  '/_public/catalogue': typeof PublicCatalogueRoute
   '/_public/login': typeof PublicLoginRoute
+  '/_public/payment-cancel': typeof PublicPaymentCancelRoute
+  '/_public/payment-success': typeof PublicPaymentSuccessRoute
   '/_public/register': typeof PublicRegisterRoute
   '/_public/': typeof PublicIndexRoute
   '/_protected/_admin/listings': typeof ProtectedAdminListingsRoute
   '/_protected/_admin/users': typeof ProtectedAdminUsersRoute
+  '/_public/catalogue/$salesPostGuid': typeof PublicCatalogueSalesPostGuidRoute
+  '/_public/catalogue/': typeof PublicCatalogueIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -134,11 +162,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/my-listing'
     | '/profile'
-    | '/catalogue'
     | '/login'
+    | '/payment-cancel'
+    | '/payment-success'
     | '/register'
     | '/listings'
     | '/users'
+    | '/catalogue/$salesPostGuid'
+    | '/catalogue/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -146,11 +177,14 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/my-listing'
     | '/profile'
-    | '/catalogue'
     | '/login'
+    | '/payment-cancel'
+    | '/payment-success'
     | '/register'
     | '/listings'
     | '/users'
+    | '/catalogue/$salesPostGuid'
+    | '/catalogue'
   id:
     | '__root__'
     | '/_protected'
@@ -160,12 +194,15 @@ export interface FileRouteTypes {
     | '/_protected/dashboard'
     | '/_protected/my-listing'
     | '/_protected/profile'
-    | '/_public/catalogue'
     | '/_public/login'
+    | '/_public/payment-cancel'
+    | '/_public/payment-success'
     | '/_public/register'
     | '/_public/'
     | '/_protected/_admin/listings'
     | '/_protected/_admin/users'
+    | '/_public/catalogue/$salesPostGuid'
+    | '/_public/catalogue/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -203,18 +240,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicRegisterRouteImport
       parentRoute: typeof PublicRouteRoute
     }
+    '/_public/payment-success': {
+      id: '/_public/payment-success'
+      path: '/payment-success'
+      fullPath: '/payment-success'
+      preLoaderRoute: typeof PublicPaymentSuccessRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/payment-cancel': {
+      id: '/_public/payment-cancel'
+      path: '/payment-cancel'
+      fullPath: '/payment-cancel'
+      preLoaderRoute: typeof PublicPaymentCancelRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
     '/_public/login': {
       id: '/_public/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof PublicLoginRouteImport
-      parentRoute: typeof PublicRouteRoute
-    }
-    '/_public/catalogue': {
-      id: '/_public/catalogue'
-      path: '/catalogue'
-      fullPath: '/catalogue'
-      preLoaderRoute: typeof PublicCatalogueRouteImport
       parentRoute: typeof PublicRouteRoute
     }
     '/_protected/profile': {
@@ -251,6 +295,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof ProtectedAdminRouteRouteImport
       parentRoute: typeof ProtectedRouteRoute
+    }
+    '/_public/catalogue/': {
+      id: '/_public/catalogue/'
+      path: '/catalogue'
+      fullPath: '/catalogue/'
+      preLoaderRoute: typeof PublicCatalogueIndexRouteImport
+      parentRoute: typeof PublicRouteRoute
+    }
+    '/_public/catalogue/$salesPostGuid': {
+      id: '/_public/catalogue/$salesPostGuid'
+      path: '/catalogue/$salesPostGuid'
+      fullPath: '/catalogue/$salesPostGuid'
+      preLoaderRoute: typeof PublicCatalogueSalesPostGuidRouteImport
+      parentRoute: typeof PublicRouteRoute
     }
     '/_protected/_admin/users': {
       id: '/_protected/_admin/users'
@@ -303,17 +361,23 @@ const ProtectedRouteRouteWithChildren = ProtectedRouteRoute._addFileChildren(
 )
 
 interface PublicRouteRouteChildren {
-  PublicCatalogueRoute: typeof PublicCatalogueRoute
   PublicLoginRoute: typeof PublicLoginRoute
+  PublicPaymentCancelRoute: typeof PublicPaymentCancelRoute
+  PublicPaymentSuccessRoute: typeof PublicPaymentSuccessRoute
   PublicRegisterRoute: typeof PublicRegisterRoute
   PublicIndexRoute: typeof PublicIndexRoute
+  PublicCatalogueSalesPostGuidRoute: typeof PublicCatalogueSalesPostGuidRoute
+  PublicCatalogueIndexRoute: typeof PublicCatalogueIndexRoute
 }
 
 const PublicRouteRouteChildren: PublicRouteRouteChildren = {
-  PublicCatalogueRoute: PublicCatalogueRoute,
   PublicLoginRoute: PublicLoginRoute,
+  PublicPaymentCancelRoute: PublicPaymentCancelRoute,
+  PublicPaymentSuccessRoute: PublicPaymentSuccessRoute,
   PublicRegisterRoute: PublicRegisterRoute,
   PublicIndexRoute: PublicIndexRoute,
+  PublicCatalogueSalesPostGuidRoute: PublicCatalogueSalesPostGuidRoute,
+  PublicCatalogueIndexRoute: PublicCatalogueIndexRoute,
 }
 
 const PublicRouteRouteWithChildren = PublicRouteRoute._addFileChildren(
