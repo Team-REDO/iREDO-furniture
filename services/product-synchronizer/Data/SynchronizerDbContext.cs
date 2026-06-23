@@ -3,15 +3,10 @@ using MongoDB.Driver;
 
 public class SynchronizerDbContext : DbContext
 {
-    public DbSet<ProcessedEvent> ProcessedEvents { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
+    public SynchronizerDbContext(DbContextOptions<SynchronizerDbContext> options)
+        : base(options)
     {
-        var connectionString = Environment.GetEnvironmentVariable("MYSQL_CONNECTION");
-
-        if (string.IsNullOrEmpty(connectionString))
-            throw new Exception("MYSQL_CONNECTION is not set");
-
-        options.UseMySql(connectionString, Microsoft.EntityFrameworkCore.ServerVersion.AutoDetect(connectionString));
     }
+
+    public DbSet<ProcessedEvent> ProcessedEvents { get; set; }
 }

@@ -38,17 +38,40 @@ services:
       timeout: 5s
       retries: 10
 
-  mongodb:
-    container_name: iREDO-salesPost-READ
+  # mongodb:
+  #   container_name: iREDO-salesPost-READ
+  #   image: mongo:7.0
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     MONGO_INITDB_DATABASE: furnitures
+  #   volumes:
+  #     - mongodb-data:/data/db
+  #     - ./services/product-view/src/mongo-init/seed.js:/docker-entrypoint-initdb.d/01-seed.js:ro
+  #     # - ./infrastructure/databases/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js:ro
+  #   restart: unless-stopped
+
+  mongodb-product:
+    container_name: iREDO-product-mongodb
     image: mongo:7.0
     ports:
       - "27017:27017"
     environment:
       MONGO_INITDB_DATABASE: furnitures
     volumes:
-      - mongodb-data:/data/db
+      - mongodb-product-data:/data/db
       - ./services/product-view/src/mongo-init/seed.js:/docker-entrypoint-initdb.d/01-seed.js:ro
-      # - ./infrastructure/databases/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js:ro
+    restart: unless-stopped
+
+  mongodb-purchase:
+    container_name: iREDO-purchase-mongodb
+    image: mongo:7.0
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: purchases
+    volumes:
+      - mongodb-purchase-data:/data/db
     restart: unless-stopped
 
   api-gateway:
@@ -77,11 +100,11 @@ services:
       - ./services/product-view/.env
     environment:
       ASPNETCORE_URLS: http://+:8080
-      MONGO_CONNECTION: mongodb://mongodb:27017
+      MONGO_CONNECTION: mongodb://mongodb-product:27017
     ports:
       - "${PRODUCT_VIEW_PORT}:8080"
     depends_on:
-      mongodb:
+      mongodb-product:
         condition: service_started
     restart: unless-stopped
 
@@ -99,44 +122,41 @@ services:
       - MAILJET_SECRET=${MAILJET_SECRET}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - MYSQL_CONNECTION=${MYSQL_EMAIL_CONNECTION}
-  # depends_on:
-  #   - rabbitmq
-  #   - mysql
 
   synchronizerservice:
     container_name: iREDO-synchronizer-service
     build: ./services/product-synchronizer
+    environment:
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - MONGO_CONNECTION=mongodb://mongodb-product:27017
+      - QUEUE_NAME=${QUEUE_NAME}
+      - MYSQL_CONNECTION=${MYSQL_SYNC_CONNECTION}
     depends_on:
       rabbitmq:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    environment:
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - MONGO_CONNECTION=${MONGO_CONNECTION}
-      - QUEUE_NAME=${QUEUE_NAME}
-      - MYSQL_CONNECTION=${MYSQL_SYNC_CONNECTION}
-    # depends_on:
-    #   - rabbitmq
-    #   - mysql
+      mongodb-product:
+        condition: service_started
 
   purchaseservice:
     container_name: iREDO-purchase-service
     build: ./services/purchase
-    # depends_on:
-    #   - rabbitmq
-    #   - mysql
+    environment:
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - QUEUE_NAME=${QUEUE_NAME}
+      - MONGO_CONNECTION=mongodb://mongodb-purchase:27017
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
     depends_on:
       rabbitmq:
         condition: service_healthy
       mysql:
         condition: service_healthy
-    environment:
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - QUEUE_NAME=${QUEUE_NAME}
-      - MONGO_CONNECTION=${MONGO_CONNECTION}
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      mongodb-purchase:
+        condition: service_started
+
 
   user-service:
     container_name: iREDO-Service-User
@@ -165,5 +185,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  mongodb-data:
+  mongodb-product-data:
+  mongodb-purchase-data:
   mysql_data:
