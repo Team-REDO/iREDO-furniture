@@ -127,8 +127,7 @@ namespace user.Controllers
                 Expires = DateTimeOffset.UtcNow.AddHours(1)
             });
 
-            //return Redirect("/catalogue");
-            return Ok(new { token });
+            return Redirect("/catalogue");
         }
 
         [Authorize]
