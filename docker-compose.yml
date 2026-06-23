@@ -1,10 +1,56 @@
- rabbitmq:
+services:
+  rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
-  
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mssql:
+    container_name: ${CONTAINER_NAME}
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    env_file:
+      - ./services/user/.env
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=${USER_DB_PASSWORD}
+    ports:
+      - "${USER_DB_PORT}:1433"
+
+  mysql:
+    image: mysql:8
+    container_name: iREDO-email-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: emaildb
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    container_name: iREDO-salesPost-READ
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: furnitures
+    volumes:
+      - mongodb-data:/data/db
+      - ./services/product-view/src/mongo-init/seed.js:/docker-entrypoint-initdb.d/01-seed.js:ro
+      # - ./infrastructure/databases/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js:ro
+    restart: unless-stopped
+
   api-gateway:
     container_name: iredo-api-gateway
     build:
@@ -23,33 +69,8 @@
       retries: 5
     restart: unless-stopped
 
-  mysql:
-    image: mysql:8
-    container_name: mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-
-  mongodb:
-    container_name: iredo-mongodb
-    image: mongo:7.0
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_DATABASE: furnitures
-    volumes:
-      - mongodb-data:/data/db
-      - ./services/product-view/src/mongo-init/seed.js:/docker-entrypoint-initdb.d/01-seed.js:ro
-      # - ./infrastructure/databases/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js:ro
-    restart: unless-stopped
-
   product-view:
-    container_name: iredo-product-view
+    container_name: iREDO-product-view
     build:
       context: ./services/product-view
     env_file:
@@ -64,8 +85,76 @@
         condition: service_started
     restart: unless-stopped
 
+  emailservice:
+    container_name: iREDO-email-service
+    build: ./services/email-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - MAILJET_API_KEY=${MAILJET_API_KEY}
+      - MAILJET_SECRET=${MAILJET_SECRET}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - MYSQL_CONNECTION=${MYSQL_EMAIL_CONNECTION}
+  # depends_on:
+  #   - rabbitmq
+  #   - mysql
+
+  synchronizerservice:
+    container_name: iREDO-synchronizer-service
+    build: ./services/product-synchronizer
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - MONGO_CONNECTION=${MONGO_CONNECTION}
+      - QUEUE_NAME=${QUEUE_NAME}
+      - MYSQL_CONNECTION=${MYSQL_SYNC_CONNECTION}
+    # depends_on:
+    #   - rabbitmq
+    #   - mysql
+
+  purchaseservice:
+    container_name: iREDO-purchase-service
+    build: ./services/purchase
+    # depends_on:
+    #   - rabbitmq
+    #   - mysql
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - QUEUE_NAME=${QUEUE_NAME}
+      - MONGO_CONNECTION=${MONGO_CONNECTION}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+
+  user-service:
+    container_name: iREDO-Service-User
+    build:
+      context: ./services/user
+    env_file:
+      - ./services/user/.env
+    ports:
+      - "${USER_API_PORT}:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=mssql,1433;Database=${USER_DB_NAME};User=${USER_DB_USER};Password=${USER_DB_PASSWORD};TrustServerCertificate=True
+    depends_on:
+      mssql:
+        condition: service_started
+
   client:
-    container_name: iredo-client
+    container_name: iREDO-client
     build:
       context: ./client
     ports:
@@ -75,63 +164,6 @@
         condition: service_healthy
     restart: unless-stopped
 
-  emailservice:
-    build: ./services/email-service
-    container_name: emailservice
-    depends_on:
-      - rabbitmq
-      - mysql
-    environment:
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - MAILJET_API_KEY=${MAILJET_API_KEY}
-      - MAILJET_SECRET=${MAILJET_SECRET}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - MYSQL_CONNECTION=${MYSQL_EMAIL_CONNECTION}
-
-  synchronizerservice:
-    build: ./services/product-synchronizer
-    container_name: synchronizerservice
-    depends_on:
-      - rabbitmq
-      - mysql
-    environment:
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - MONGO_CONNECTION=${MONGO_CONNECTION}
-      - QUEUE_NAME=${QUEUE_NAME}
-      - MYSQL_CONNECTION=${MYSQL_SYNC_CONNECTION}
-
-  purchaseservice:
-    build: ./services/purchase-service
-    container_name: purchaseservice
-    depends_on:
-      - rabbitmq
-      - mysql
-      
-  mssql:
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    env_file:
-      - ./services/user/.env
-    container_name: ${CONTAINER_NAME}
-    environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=${USER_DB_PASSWORD}
-    ports:
-      - "${USER_DB_PORT}:1433"
-
-  user-service:
-    build:
-      context: ./services/user
-    container_name: REDO_Service_User
-    env_file:
-      - ./services/user/.env
-    ports:
-      - "${USER_API_PORT}:8080"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=mssql,1433;Database=${USER_DB_NAME};User=${USER_DB_USER};Password=${USER_DB_PASSWORD};TrustServerCertificate=True
-    depends_on:
-      - mssql
-
 volumes:
   mongodb-data:
-  mysql_data::
+  mysql_data:

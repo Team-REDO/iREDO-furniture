@@ -11,6 +11,9 @@ bin/
 obj/
 out/
 /.vs
+**/bin/
+**/obj/
+**/.vs/
 # Java files
 
 # Testing files
