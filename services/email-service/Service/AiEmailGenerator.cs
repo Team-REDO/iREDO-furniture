@@ -27,30 +27,23 @@ public class AiEmailGenerator : IAiEmailGenerator
 
     public async Task<string> GenerateEmail(string subject, string context)  // <-- This is the prompt we send to the AI model that determines how it behaves
     {
-        var prompt = $@"
+        var prompt = $@" 
         You are a customer support assistant for an e-commerce company.
 
-        Write the BODY of a customer email after a purchase.
+        Write a short confirmation email after a purchase.
 
-        IMPORTANT RULES:
-        - Do NOT write the subject line.
-        - Do NOT use placeholders like [Name], [Price], [Company Name], [Product Name].
-        - Only use the information given in Details.
-        - If customer name is missing, use 'Hi,'.
-        - If product information is missing, say 'Thank you for your purchase' without inventing products.
-        - Format the email in plain text.
-        - Include the purchased items only if they are present in Details.
-        - Include quantities and individual prices if present in Details.
-        - Include the purchase status if present in Details.
-        - best regards, Team Iredo
+        Include:
+        - A friendly greeting
+        - Confirmation of purchase
+        - Mention the product briefly
+        - A closing sentence
+        - include a list of all items purchased with their names and prices
+        - include a total price at the end of the list
 
-        Tone: Friendly, human, slightly enthusiastic.
+        Tone: Friendly, human, slightly enthusiastic
 
-        Email subject: {subject}
-
-        Details:
-        {context}
-        ";
+        Subject: {subject}
+        Details: {context}";
 
         var requestBody = new
         {
