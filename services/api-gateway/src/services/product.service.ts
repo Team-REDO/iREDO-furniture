@@ -12,29 +12,114 @@ type ProductViewGraphQLResponse<T> = {
 //   allFurniture: ProductViewVariables[];
 // };
 
-type ProductViewFurniture = {
+// type ProductViewFurniture = {
+//   title: string;
+//   price: number;
+//   zip_code: string;
+//   categories?: Array<{
+//     name?: string;
+//     subcats?: Array<{
+//       name?: string;
+//     }>;
+//   }>;
+//   color?: {
+//     name?: string;
+//   };
+//   images?: Array<{
+//     url: string;
+//   }>;
+// };
+
+// type TProductViewFurniture = {
+//   salesPostGuid: string;
+//   personGuid: string;
+//   title: string;
+//   description?: string;
+//   size?: string;
+//   condition?: string | number;
+//   quantity?: number;
+//   price: number;
+//   city?: string;
+//   colors?: Array<{
+//     name?: string;
+//     href?: string;
+//   }>;
+//   categories?: Array<{
+//     categoryName?: string;
+//     subcategories?: Array<{
+//       subcategoryName?: string;
+//     }>;
+//   }>;
+//   images?: Array<{
+//     imageUrl?: string;
+//   }>;
+// };
+
+type TProductViewFurniture = {
+  id: string;
+  salesPostGuid: string;
+  personGuid: string;
   title: string;
+  description: string;
+  size: string;
+  quantity: number;
   price: number;
-  zip_code: string;
-  categories?: Array<{
-    name?: string;
-    subcats?: Array<{
-      name?: string;
+  condition: string;
+  city: string;
+  modifiedAt: string;
+  colors: Array<{
+    name: string;
+    href: string;
+  }>;
+  categories: Array<{
+    categoryName: string;
+    subcategories: Array<{
+      subcategoryName: string;
     }>;
   }>;
-  color?: {
-    name?: string;
-  };
-  images?: Array<{
-    url: string;
+  images: Array<{
+    imageUrl: string;
   }>;
 };
 
-type ClientFurniture = {
+// type TClientFurniture = {
+//   salesPostGuid: string;
+//   personGuid: string;
+//   title: string;
+//   description?: string;
+//   size?: string;
+//   condition?: string | number;
+//   quantity?: number;
+//   price: number;
+//   city?: string;
+//   colors: Array<{
+//     name?: string;
+//     href?: string;
+//   }>;
+//   categories: Array<{
+//     categoryName?: string;
+//     subcategories?: Array<{
+//       subcategoryName?: string;
+//     }>;
+//   }>;
+//   images: string[];
+// };
+
+type TClientFurniture = {
+  salesPostGuid: string;
+  personGuid: string;
   title: string;
+  description?: string;
+  size?: string;
+  condition?: string | number;
+  quantity?: number;
   price: number;
-  city: string;
-  categories?: Array<{
+  city?: string;
+  colors: Array<{
+    name?: string;
+    href?: string;
+  }>;
+  categories: Array<{
     name?: string;
     subcats?: Array<{
       name?: string;
@@ -43,23 +128,101 @@ type ClientFurniture = {
   images: string[];
 };
 
+// type ClientFurniture = {
+//   title: string;
+//   price: number;
+//   city: string;
+//   categories?: Array<{
+//     name?: string;
+//     subcats?: Array<{
+//       name?: string;
+//     }>;
+//   }>;
+//   images: string[];
+// };
+
+// const ALL_FURNITURE_QUERY = `
+//   query GetAllFurniture {
+//     allFurniture {
+//       title
+//       price
+//       zip_code
+//       categories {
+//         name
+//         subcats {
+//           name
+//         }
+//       }
+//       color {
+//         name
+//       }
+//       images {
+//         url
+//       }
+//     }
+//   }
+// `;
+
+// const ALL_FURNITURE_QUERY = `
+//   query GetAllFurniture {
+//     allFurniture {
+//       nodes {
+//         salesPostGuid
+//         personGuid
+//         title
+//         description
+//         size
+//         condition
+//         quantity
+//         price
+//         city
+//         colors {
+//           name
+//           href
+//         }
+//         categories {
+//           categoryName
+//           subcategories {
+//             subcategoryName
+//           }
+//         }
+//         images {
+//           imageUrl
+//         }
+//       }
+//     }
+//   }
+// `;
+
 const ALL_FURNITURE_QUERY = `
   query GetAllFurniture {
-    allFurniture {
-      title
-      price
-      zip_code
-      categories {
-        name
-        subcats {
+    allFurniture(first: 25) {
+      totalCount
+      nodes {
+        id
+        salesPostGuid
+        personGuid
+        title
+        description
+        size
+        quantity
+        price
+        condition
+        city
+        modifiedAt
+        colors {
           name
+          href
         }
-      }
-      color {
-        name
-      }
-      images {
-        url
+        categories {
+          categoryName
+          subcategories {
+            subcategoryName
+          }
+        }
+        images {
+          imageUrl
+        }
       }
     }
   }
@@ -97,20 +260,44 @@ async function requestProductView<T>(query: string, variables?: ProductViewVaria
   return response.data.data;
 }
 
-function transformFurniture(furniture: ProductViewFurniture[]): ClientFurniture[] {
+function transformFurniture(furniture: TProductViewFurniture[]): TProductViewFurniture[] {
   return furniture.map((item) => ({
-    title: item.title,
-    price: item.price,
-    city: item.zip_code,
+    ...item,
+    colors: item.colors ?? [],
     categories: item.categories ?? [],
-    images: item.images?.map((img) => img.url) || [],
+    images: item.images ?? [],
   }));
 }
 
+// function transformFurniture(furniture: TProductViewFurniture[]): TClientFurniture[] {
+//   return furniture.map((item) => ({
+//     title: item.title,
+//     price: item.price,
+//     city: item.zip_code,
+//     categories: item.categories ?? [],
+//     images: item.images?.map((img) => img.url) || [],
+//   }));
+// }
+
+// export const getProducts = async () => {
+//   const result = await requestProductView<{ allFurniture: any[] }>(ALL_FURNITURE_QUERY);
+//   return {
+//     furniture: transformFurniture(result.allFurniture),
+//   };
+
+// };
+
 export const getProducts = async () => {
-  const result = await requestProductView<{ allFurniture: any[] }>(ALL_FURNITURE_QUERY);
+  const result = await requestProductView<{
+    allFurniture: {
+      totalCount: number;
+      nodes: TProductViewFurniture[];
+    };
+  }>(ALL_FURNITURE_QUERY);
+
   return {
-    furniture: transformFurniture(result.allFurniture),
+    furniture: transformFurniture(result.allFurniture.nodes),
+    furnitureTotal: result.allFurniture.totalCount,
   };
 };
 

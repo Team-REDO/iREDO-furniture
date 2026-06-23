@@ -23,20 +23,22 @@ services:
     ports:
       - "27017:27017"
     environment:
-      MONGO_INITDB_DATABASE: furnituredatabase
+      MONGO_INITDB_DATABASE: furnitures
     volumes:
       - mongodb-data:/data/db
-      - ./infrastructure/databases/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js:ro
+      - ./services/product-view/src/mongo-init/seed.js:/docker-entrypoint-initdb.d/01-seed.js:ro
+      # - ./infrastructure/databases/init-mongo.js:/docker-entrypoint-initdb.d/01-init.js:ro
     restart: unless-stopped
 
   product-view:
     container_name: iredo-product-view
     build:
-      context: ./services/product-view/src/GraphProductView
+      context: ./services/product-view
     env_file:
       - ./services/product-view/.env
     environment:
       ASPNETCORE_URLS: http://+:8080
+      MONGO_CONNECTION: mongodb://mongodb:27017
     ports:
       - "${PRODUCT_VIEW_PORT}:8080"
     depends_on:
@@ -66,6 +68,34 @@ services:
     ports:
       - "${USER_DB_PORT}:1433"
 
+  purchaseservice:
+    build:
+      context: ./services/purchase/src/purchase/purchase
+      dockerfile: Dockerfile
+    container_name: purchaseservice
+    ports:
+      - "5258:8080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+
+      QUEUE_NAME: purchase_queue
+      RABBITMQ_HOST: guest
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: strongpassword
+
+      MONGO_CONNECTION: mongodb://mongo:27017
+
+      STRIPE_API_KEY: pk_test_51TZzC5LaNMif5mNleYRX3zV3peNGC8WY1Vt27uHEzflqNPR5Wyo0qJjCoebEGoaYgpeAFslgQgnpEYekCn7YnDli00iz5leX9o
+      STRIPE_SECRET_KEY: sk_test_51TZzC5LaNMif5mNlZdYGph5ocjHu7KYLHAs4PFgqlK6rruMWhiVfhbIzxkTzZsMOh1bXPdjoahvnWj76BdntqeGU00t4ClOwUc
+      STRIPE_WEBHOOK_SECRET: whsec_9111005b31b4c34db576ca1f8127e6676a2d6d70a8f3618df4b664827c970990
+    restart: unless-stopped
+
   user-service:
     build:
       context: ./services/user
@@ -79,6 +109,21 @@ services:
       - ConnectionStrings__DefaultConnection=Server=mssql,1433;Database=${USER_DB_NAME};User=${USER_DB_USER};Password=${USER_DB_PASSWORD};TrustServerCertificate=True
     depends_on:
       - mssql
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: iredo-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: strongpassword
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   mongodb-data:
