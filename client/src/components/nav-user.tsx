@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { useTheme } from "@/components/theme-provider";
-import { ChevronsUpDownIcon, CircleUserRound, Settings, LogOutIcon, Moon, Sun, Monitor } from "lucide-react";
+import { ChevronsUpDownIcon, CircleUserRound, Settings, Moon, Sun, Monitor } from "lucide-react";
 
 export function NavUser({
   user,
