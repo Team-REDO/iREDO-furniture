@@ -2,5 +2,6 @@
 
 public class SalesPostRemovedEvent
 {
+    public Guid EventId { get; set; }
     public Guid SalesPostGuid { get; set; }
 }

@@ -221,10 +221,11 @@ namespace user.Controllers
 
             _db.Person_Removed.Add(personRemoved);
             _db.SaveChanges();
-            
+
             await _publisher.PublishUserRemoved(
                 new UserRemovedEvent
                 {
+                    EventId = Guid.NewGuid(),
                     PersonGuid = person.PersonGuid
                 }
             );
