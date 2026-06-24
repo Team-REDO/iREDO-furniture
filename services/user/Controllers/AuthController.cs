@@ -23,13 +23,25 @@ namespace user.Controllers
     {
         public AuthController(AppDbContext db, JwtService jwtService, RabbitMqService rabbitMq, UserEventPublisher publisher) : base(db,jwtService,rabbitMq, publisher) { }
 
+        // [HttpGet("google-login")]
+        // public IActionResult GoogleLogin()
+        // {
+        //     return Challenge(new AuthenticationProperties
+        //     {
+        //         RedirectUri = "/api/auth/google-response"
+        //     }, "Google");
+        // }
         [HttpGet("google-login")]
         public IActionResult GoogleLogin()
         {
-            return Challenge(new AuthenticationProperties
+            var properties = new AuthenticationProperties
             {
                 RedirectUri = "/api/auth/google-response"
-            }, "Google");
+            };
+
+            properties.SetParameter("prompt", "select_account");
+
+            return Challenge(properties, "Google");
         }
 
         [HttpGet("google-response")]
