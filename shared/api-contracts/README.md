@@ -1,0 +1,123 @@
+# _TEMPLATE_ - **API Contract** 
+
+## **Service Overview**
+| **Field**               | **Value**                                   |
+| ------------------- | --------------------------------------- |
+| Service Name        | Customer Service                        |
+| Service Type        | REST / GraphQL / gRPC                   |
+| Version             | v1                                      |
+| Base URL / Endpoint | localhost:8080/customerservice          |
+| Authentication      | API Key / OAuth2 / JWT                  |
+| Contact developer   | Peter                                   |
+
+## **API Definitions**
+Examples:
+1. [REST](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#1-rest-api---example)
+2. [GraphQL](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#2-graphql-api---example)
+3. [gRPC](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#3-grpc-api---example)
+   
+More: 
+[Optional add-ons](https://github.com/Team-REDO/iREDO-furniture/blob/APIContractTemplate/shared/api-contracts/README.md#optional-adds)
+
+## 1. REST API - EXAMPLE
+### **Endpoints**
+| **Header**        | Required | Example          |
+| ------------- | -------- | ---------------- |
+| Authorization | Yes      | Bearer xxx       |
+| Content-Type  | Yes      | application/json |
+
+
+| **Method** | **Path**            | Description     |
+| ------ | --------------- | --------------- |
+| GET    | /customers/{id} | Fetch customer  |
+| POST   | /customers      | Create customer |
+| PUT    | /cutomers/{id}  | Update customer |
+... etc.
+
+### **Path Params**
+| Name | Type | Required |
+| ---- | ---- | -------- |
+| id   | UUID | Yes      |
+
+### **Query Params**
+| Name | Type    | Required | Default |
+| ---- | ------- | -------- | ------- |
+| page | integer | No       | 1       |
+
+### **Request Body**
+`{
+  "name": "John Doe",
+  "email": "john@example.com"
+}`
+#### **200 ok - Response Body**
+`{
+  "id": "cust_001",
+  "name": "John Doe",
+  "email": "john@example.com"
+}`
+#### **404 error - Response Body**
+`{
+  "code": "CUSTOMER_NOT_FOUND",
+  "message": "Customer does not exist"
+}`
+
+## 2. GraphQL API - EXAMPLE 
+### **Endpoint**
+`/graphql`
+
+### **Queries**
+`query GetCustomer($id: ID!) {
+  customer(id: $id) {
+    id
+    name
+    email
+  }
+}`
+
+### **Mutations**
+`mutation CreateCustomer($input: CustomerInput!) {
+  createCustomer(input: $input) {
+    id
+  }
+}`
+
+### **Error Format**
+`{
+  "errors": [
+    {
+      "message": "Unauthorized"
+    }
+  ]
+}`
+
+## 3. gRPC API - EXAMPLE 
+#### **Service Definition**
+##### ** Proto **
+`service CustomerService {
+  rpc GetCustomer (CustomerRequest) returns (CustomerResponse);
+}`
+
+### **Request Message**
+##### ** Proto **
+`message CustomerRequest {
+  string id = 1;
+}`
+
+### **Response Message**
+##### ** Proto **
+`message CustomerResponse {
+  string id = 1;
+  string name = 2;
+}`
+
+## **Optional Adds**
+
+You can extend with:
+
+- OpenAPI/Swagger links
+- Diagrams?
+
+**^... But add-ons are not necessary for contract - only a nice to have!**
+
+
+
